@@ -8,9 +8,14 @@ import ElementUI from 'element-ui'
 import locale from 'element-ui/lib/locale/lang/en'
 import 'element-theme-default'
 
+import Vuetify from 'vuetify'
+import 'vuetify/dist/vuetify.min.css'
+import 'material-design-icons-iconfont/dist/material-design-icons.css'
+
 Vue.config.productionTip = false
 
 // Vue.use(VueRouter)
+Vue.use(Vuetify)
 Vue.use(ElementUI, { locale })
 
 const vue = new Vue({

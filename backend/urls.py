@@ -8,6 +8,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
+from .api import views
 from .api.views import index_view, MessageViewSet, MeasurementViewSet
 
 router = routers.DefaultRouter()
@@ -24,6 +25,8 @@ urlpatterns = [
 
     # http://localhost:8000/api/admin/
     path('api/admin/', admin.site.urls),
+
+    path('api/generate_data/', views.generate_data),
 ]
 
 

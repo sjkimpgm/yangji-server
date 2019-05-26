@@ -20,3 +20,13 @@ class MessageViewSet(viewsets.ModelViewSet):
 class MeasurementViewSet(viewsets.ModelViewSet):
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
+
+
+import datetime
+import random
+def generate_data(request):
+    for d in range(1, 32):
+        for h in range(0, 24):
+            date = datetime.datetime(2019, 5, d, h, 0, 0)
+            m = Measurement(datetime=date, measure_a=random.random(), measure_b=random.random(), measure_c=random.random(), measure_d=random.random())
+            m.save()
