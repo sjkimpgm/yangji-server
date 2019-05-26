@@ -6261,6 +6261,11 @@ thread-loader@^1.1.5:
     loader-runner "^2.3.0"
     loader-utils "^1.1.0"
 
+three@^0.104.0:
+  version "0.104.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.104.0.tgz#9ad1da492153b753a89e0df066631215bd9d9087"
+  integrity sha512-q617IMBC5k40U2E9UC4/LtmhzTOOLB1jGMIooUL+QrhZ7abiGCSDrKrpCDt9V8RTl6xw+0FYfA1PYsIPKbQOgg==
+
 throttle-debounce@^1.0.1:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/throttle-debounce/-/throttle-debounce-1.1.0.tgz#51853da37be68a155cb6e827b3514a3c422e89cd"
@@ -6617,6 +6622,13 @@ vue-eslint-parser@^2.0.3:
     espree "^3.5.2"
     esquery "^1.0.0"
     lodash "^4.17.4"
+
+vue-gl@^0.12.2:
+  version "0.12.2"
+  resolved "https://registry.yarnpkg.com/vue-gl/-/vue-gl-0.12.2.tgz#5e2badbf93832733ac057700eb39a1d0ae765457"
+  integrity sha512-ZBakXnodFDDD4G0SJ+9vWihASn4jyDLHd0qp+Qb/Ej2JuV3BhkgMzsSb58Rp5fQW08O5GF9KebMQsd1cAsWxQg==
+  dependencies:
+    three "^0.104.0"
 
 vue-google-charts@^0.3.2:
   version "0.3.2"

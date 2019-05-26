@@ -13,7 +13,9 @@
     "element-theme-default": "^1.4.13",
     "element-ui": "^2.8.2",
     "js-cookie": "^2.2.0",
+    "three": "^0.104.0",
     "vue": "^2.5.17",
+    "vue-gl": "^0.12.2",
     "vue-google-charts": "^0.3.2",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"

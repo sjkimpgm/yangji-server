@@ -1,11 +1,9 @@
 <template>
-  <div>
-    <GChart
-      type="LineChart"
-      :data="chartData"
-      :options="chartOptions"
-    />
-  </div>
+  <GChart
+    type="LineChart"
+    :data="chartData"
+    :options="chartOptions"
+  />
 </template>
 
 <script>
