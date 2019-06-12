@@ -30,3 +30,6 @@ def generate_data(request):
             date = datetime.datetime(2019, 5, d, h, 0, 0)
             m = Measurement(datetime=date, measure_a=random.random(), measure_b=random.random(), measure_c=random.random(), measure_d=random.random())
             m.save()
+
+def clear_data(request):
+    Measurement.objects.all().delete()

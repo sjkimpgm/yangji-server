@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/admin/', admin.site.urls),
 
     path('api/generate_data/', views.generate_data),
+    path('api/clear_data/', views.clear_data),
 ]
 
 
