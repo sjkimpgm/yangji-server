@@ -268,7 +268,7 @@ class Migration(migrations.Migration):
             name='theta_z',
             field=models.FloatField(default=0.0),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='device',
             name='D',
             field=models.FloatField(default=0.0),
