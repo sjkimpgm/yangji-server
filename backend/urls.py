@@ -9,11 +9,12 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .api import views
-from .api.views import index_view, MessageViewSet, MeasurementViewSet
+from .api.views import index_view, MessageViewSet, MeasurementViewSet, DeviceViewSet
 
 router = routers.DefaultRouter()
 router.register('messages', MessageViewSet)
 router.register('measurement', MeasurementViewSet)
+router.register('device', DeviceViewSet)
 
 urlpatterns = [
 
@@ -27,7 +28,7 @@ urlpatterns = [
     path('api/admin/', admin.site.urls),
 
     path('api/generate_data/', views.generate_data),
-    path('api/clear_data/', views.clear_data),
+    path('api/calc_device/', views.calc_device),
 ]
 
 

@@ -27,11 +27,18 @@
           <v-list-tile-title>계측값 3D로 보기</v-list-tile-title>
         </v-list-tile>
         
-        <v-list-tile>
+        <v-list-tile to="device_setup">
           <v-list-tile-action>
             <v-icon>location_on</v-icon>
           </v-list-tile-action>
           <v-list-tile-title>기기 관리</v-list-tile-title>
+        </v-list-tile>
+
+        <v-list-tile to="change_measurement">
+          <v-list-tile-action>
+            <v-icon>location_on</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title>측정값 변환</v-list-tile-title>
         </v-list-tile>
 
         <v-list-tile>
