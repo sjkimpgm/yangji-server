@@ -13,8 +13,8 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'subject', 'body', 'pk')
 
 
-# FIXME(sjkim): assume single device
 class Measurement(models.Model):
+    device_id = models.CharField(max_length=17)
     datetime = models.DateTimeField()
 
     measure_a = models.FloatField()
@@ -23,18 +23,19 @@ class Measurement(models.Model):
     measure_d = models.FloatField()
 
     def __str__(self):
-        return "{}: {:.2f}, {:.2f}, {:.2f}, {:.2f}".format(self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d)
+        return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d)
+
 
 class MeasurementSerializer(serializers.ModelSerializer):
     datetime = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
         model = Measurement
-        fields = ('datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d')
+        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d')
 
 
 class Device(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20) # same as device_id
 
     V_A0 = models.FloatField(default=0.0)
     V_B0 = models.FloatField(default=0.0)
