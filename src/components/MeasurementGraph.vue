@@ -1,9 +1,41 @@
 <template>
-  <GChart
-    type="LineChart"
-    :data="chartData"
-    :options="chartOptions"
-  />
+  <div>
+    <div>
+      <span>날짜 선택: </span>
+      <select v-model="selected" @change="onChange()">
+        <option v-for="option in dates">
+          {{ option }}
+        </option>
+      </select>
+    </div>
+
+    <div>
+      <input type="checkbox" id="check_x" v-model="check_x" @change="onChange()"><label for="check_x">X</label>
+      &nbsp;
+      <input type="checkbox" id="check_y" v-model="check_y" @change="onChange()"><label for="check_y">Y</label>
+      &nbsp;
+      <input type="checkbox" id="check_z" v-model="check_z" @change="onChange()"><label for="check_z">Z</label>
+      &nbsp;
+      <input type="checkbox" id="check_theta" v-model="check_theta" @change="onChange()"><label for="check_x">Theta</label>
+      &nbsp;
+      <span>/</span>
+      &nbsp;
+      <input type="checkbox" id="check_a" v-model="check_a" @change="onChange()"><label for="check_a">A</label>
+      &nbsp;
+      <input type="checkbox" id="check_b" v-model="check_b" @change="onChange()"><label for="check_b">B</label>
+      &nbsp;
+      <input type="checkbox" id="check_c" v-model="check_c" @change="onChange()"><label for="check_c">C</label>
+      &nbsp;
+      <input type="checkbox" id="check_d" v-model="check_d" @change="onChange()"><label for="check_d">D</label>
+    </div>
+
+
+    <GChart
+      type="LineChart"
+      :data="chartData"
+      :options="chartOptions"
+    />
+  </div>
 </template>
 
 <script>
@@ -16,7 +48,17 @@ export default {
   },
   data() {
     return {
+      selected: '--',
+      dates: ['--'],
       chartData: null,
+      check_x: true,
+      check_y: true,
+      check_z: true,
+      check_theta: true,
+      check_a: false,
+      check_b: false,
+      check_c: false,
+      check_d: false,
       chartOptions: {
         height: 600,
         curveType: 'function',
@@ -32,24 +74,55 @@ export default {
   },
   methods: {
     measurement_formatter(row, column, value) {
-      return value.toFixed(2);
+      return value.toFixed(3);
+    },
+
+    onChange() {
+      var vm = this;
+
+      axios
+        .get('/api/measurement/?target_date=' + vm.selected)
+        .then(function(response) {
+          var converted_data = ['datetime']
+          if(vm.check_x) converted_data.push('X')
+          if(vm.check_y) converted_data.push('Y')
+          if(vm.check_z) converted_data.push('Z')
+          if(vm.check_theta) converted_data.push('Theta')
+          if(vm.check_a) converted_data.push('A')
+          if(vm.check_b) converted_data.push('B')
+          if(vm.check_c) converted_data.push('C')
+          if(vm.check_d) converted_data.push('D')
+
+          converted_data = [converted_data]
+          
+          for(let m of response.data) {
+            let array_m = [new Date(m.datetime)]
+            if(vm.check_x) array_m.push(m.diff[0])
+            if(vm.check_y) array_m.push(m.diff[1])
+            if(vm.check_z) array_m.push(m.diff[2])
+            if(vm.check_theta) array_m.push(m.diff[3])
+            if(vm.check_a) array_m.push(m.measure_a)
+            if(vm.check_b) array_m.push(m.measure_b)
+            if(vm.check_c) array_m.push(m.measure_c)
+            if(vm.check_d) array_m.push(m.measure_d)
+
+            converted_data.push(array_m);
+          }
+
+          vm.chartData = converted_data;
+        });
     }
   },
+
   mounted() {
     var vm = this;
 
     axios
-      .get('/api/measurement/')
+      .get('/api/measurement_dates/')
       .then(function(response) {
-        var converted_data = [['datetime', 'A', 'B', 'C', 'D']];
-        for(let m of response.data) {
-          let array_m = [new Date(m.datetime), m.measure_a, m.measure_b, m.measure_c, m.measure_d];
-
-          converted_data.push(array_m);
-        }
-
-        vm.chartData = converted_data;
+        vm.dates = ['--'].concat(response.data);
       });
+
   }
 };
 </script>

@@ -13,7 +13,7 @@ from .api.views import index_view, MessageViewSet, MeasurementViewSet, DeviceVie
 
 router = routers.DefaultRouter()
 router.register('messages', MessageViewSet)
-router.register('measurement', MeasurementViewSet)
+router.register('measurement', MeasurementViewSet, base_name="measurement")
 router.register('device', DeviceViewSet)
 
 urlpatterns = [
@@ -29,6 +29,8 @@ urlpatterns = [
 
     path('api/generate_data/', views.generate_data),
     path('api/calc_device/', views.calc_device),
+
+    path('api/measurement_dates/', views.measurement_dates),
 ]
 
 

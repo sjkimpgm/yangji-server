@@ -2,7 +2,8 @@ from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
+
 
 from .models import Message, MessageSerializer, Measurement, MeasurementSerializer, Device, DeviceSerializer
 
@@ -20,8 +21,26 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 
 class MeasurementViewSet(viewsets.ModelViewSet):
-    queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['datetime']
+    ordering = ['datetime']
+
+    def get_queryset(self):
+        queryset = Measurement.objects.all()
+        target_date = self.request.query_params.get('target_date', None)
+        if target_date is not None:
+            year, month, day = target_date.split('-')
+            queryset = queryset.filter(datetime__date=datetime.date(int(year), int(month), int(day)))
+        return queryset
+
+
+def measurement_dates(request):
+    dates = Measurement.objects.values('datetime')
+    distinct_dates = {d['datetime'].date() for d in dates}
+    distinct_dates = sorted(list(distinct_dates))
+    return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
+
 
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = Device.objects.all()
@@ -134,8 +153,6 @@ def calc_device(request):
     d['inv31'] = coef_inv[3][1]
     d['inv32'] = coef_inv[3][2]
     d['inv33'] = coef_inv[3][3]
-
-    print(d)
 
     device = Device.objects.filter(id=d['id'])
     device.update(**d)
