@@ -10,23 +10,23 @@
     </div>
 
     <div>
-      <input type="checkbox" id="check_x" v-model="check_x" @change="onChange()"><label for="check_x">X</label>
+      <input type="checkbox" id="check_x" v-model="check_x" @change="drawGraph()"><label for="check_x">X</label>
       &nbsp;
-      <input type="checkbox" id="check_y" v-model="check_y" @change="onChange()"><label for="check_y">Y</label>
+      <input type="checkbox" id="check_y" v-model="check_y" @change="drawGraph()"><label for="check_y">Y</label>
       &nbsp;
-      <input type="checkbox" id="check_z" v-model="check_z" @change="onChange()"><label for="check_z">Z</label>
+      <input type="checkbox" id="check_z" v-model="check_z" @change="drawGraph()"><label for="check_z">Z</label>
       &nbsp;
-      <input type="checkbox" id="check_theta" v-model="check_theta" @change="onChange()"><label for="check_x">Theta</label>
+      <input type="checkbox" id="check_theta" v-model="check_theta" @change="drawGraph()"><label for="check_x">Theta</label>
       &nbsp;
       <span>/</span>
       &nbsp;
-      <input type="checkbox" id="check_a" v-model="check_a" @change="onChange()"><label for="check_a">A</label>
+      <input type="checkbox" id="check_a" v-model="check_a" @change="drawGraph()"><label for="check_a">A</label>
       &nbsp;
-      <input type="checkbox" id="check_b" v-model="check_b" @change="onChange()"><label for="check_b">B</label>
+      <input type="checkbox" id="check_b" v-model="check_b" @change="drawGraph()"><label for="check_b">B</label>
       &nbsp;
-      <input type="checkbox" id="check_c" v-model="check_c" @change="onChange()"><label for="check_c">C</label>
+      <input type="checkbox" id="check_c" v-model="check_c" @change="drawGraph()"><label for="check_c">C</label>
       &nbsp;
-      <input type="checkbox" id="check_d" v-model="check_d" @change="onChange()"><label for="check_d">D</label>
+      <input type="checkbox" id="check_d" v-model="check_d" @change="drawGraph()"><label for="check_d">D</label>
     </div>
 
 
@@ -59,6 +59,7 @@ export default {
       check_b: false,
       check_c: false,
       check_d: false,
+      origin_data: [],
       chartOptions: {
         height: 600,
         curveType: 'function',
@@ -77,39 +78,46 @@ export default {
       return value.toFixed(3);
     },
 
+    drawGraph() {
+      var vm = this;
+
+      var converted_data = ['datetime']
+      if(vm.check_x) converted_data.push('X')
+      if(vm.check_y) converted_data.push('Y')
+      if(vm.check_z) converted_data.push('Z')
+      if(vm.check_theta) converted_data.push('Theta')
+      if(vm.check_a) converted_data.push('A')
+      if(vm.check_b) converted_data.push('B')
+      if(vm.check_c) converted_data.push('C')
+      if(vm.check_d) converted_data.push('D')
+
+      converted_data = [converted_data]
+      
+      for(let m of vm.origin_data) {
+        let array_m = [new Date(m.datetime)]
+        if(vm.check_x) array_m.push(m.diff[0])
+        if(vm.check_y) array_m.push(m.diff[1])
+        if(vm.check_z) array_m.push(m.diff[2])
+        if(vm.check_theta) array_m.push(m.diff[3])
+        if(vm.check_a) array_m.push(m.measure_a)
+        if(vm.check_b) array_m.push(m.measure_b)
+        if(vm.check_c) array_m.push(m.measure_c)
+        if(vm.check_d) array_m.push(m.measure_d)
+
+        converted_data.push(array_m);
+      }
+
+      vm.chartData = converted_data;
+    },
+  
     onChange() {
       var vm = this;
 
       axios
         .get('/api/measurement/?target_date=' + vm.selected)
         .then(function(response) {
-          var converted_data = ['datetime']
-          if(vm.check_x) converted_data.push('X')
-          if(vm.check_y) converted_data.push('Y')
-          if(vm.check_z) converted_data.push('Z')
-          if(vm.check_theta) converted_data.push('Theta')
-          if(vm.check_a) converted_data.push('A')
-          if(vm.check_b) converted_data.push('B')
-          if(vm.check_c) converted_data.push('C')
-          if(vm.check_d) converted_data.push('D')
-
-          converted_data = [converted_data]
-          
-          for(let m of response.data) {
-            let array_m = [new Date(m.datetime)]
-            if(vm.check_x) array_m.push(m.diff[0])
-            if(vm.check_y) array_m.push(m.diff[1])
-            if(vm.check_z) array_m.push(m.diff[2])
-            if(vm.check_theta) array_m.push(m.diff[3])
-            if(vm.check_a) array_m.push(m.measure_a)
-            if(vm.check_b) array_m.push(m.measure_b)
-            if(vm.check_c) array_m.push(m.measure_c)
-            if(vm.check_d) array_m.push(m.measure_d)
-
-            converted_data.push(array_m);
-          }
-
-          vm.chartData = converted_data;
+          vm.origin_data = response.data
+          vm.drawGraph()
         });
     }
   },
