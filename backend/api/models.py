@@ -1,5 +1,6 @@
 from django.db import models
 from rest_framework import serializers
+import math
 
 
 class Message(models.Model):
@@ -22,8 +23,43 @@ class Measurement(models.Model):
     measure_c = models.FloatField()
     measure_d = models.FloatField()
 
+    @property
+    def diff(self):
+        device = Device.objects.all()[0]
+
+        V = [self.measure_a, self.measure_b, self.measure_c, self.measure_d]
+
+        F_a = [device.f_Aa, device.f_Ba, device.f_Ca, device.f_Da]
+        F_b = [device.f_Ab, device.f_Bb, device.f_Cb, device.f_Db]
+
+        F = [F_a[i] * V[i] + F_b[i] for i in range(4)]
+
+        Lk = [device.L_Ak, device.L_Bk, device.L_Ck, device.L_Dk]
+        L = [F[i] + Lk[i] for i in range(4)]
+
+        V_0 = [device.V_A0, device.V_B0, device.V_C0, device.V_D0]
+
+        F_0 = [F_a[i] * V_0[i] + F_b[i] for i in range(4)]
+        L_0 = [F_0[i] + Lk[i] for i in range(4)]
+
+        delta = [L[i] - L_0[i] for i in range(4)]
+
+        inv_A = [device.inv00, device.inv01, device.inv02, device.inv03]
+        inv_B = [device.inv10, device.inv11, device.inv12, device.inv13]
+        inv_C = [device.inv20, device.inv21, device.inv22, device.inv23]
+        inv_D = [device.inv30, device.inv31, device.inv32, device.inv33]
+
+        x = [delta[i] * inv_A[i] for i in range(4)]
+        y = [delta[i] * inv_B[i] for i in range(4)]
+        z = [delta[i] * inv_C[i] for i in range(4)]
+        a = [delta[i] * inv_D[i] for i in range(4)]
+
+        return (sum(x), sum(y), sum(z), sum(a) * 180 / math.pi)
+        
     def __str__(self):
-        return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d)
+        x, y, z, a = self.diff
+
+        return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f} / {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d, x, y, z, a)
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
@@ -31,7 +67,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measurement
-        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d')
+        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d', 'diff')
 
 
 class Device(models.Model):
