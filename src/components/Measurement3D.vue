@@ -29,11 +29,11 @@
 
             <vgl-mesh-lambert-material name="mat_left" color="#000055" />
             <vgl-box-geometry name="slab_left" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${-x/2-25} ${-z/2 + 2} ${-y/2}`" />
+            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${-x/2-30} ${-z/2 + 2} ${-y/2}`" />
 
             <vgl-mesh-lambert-material name="mat_right" color="#005500" />
             <vgl-box-geometry name="slab_right" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${x/2+25} ${z/2 + 2} ${y/2}`" />
+            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${x/2+30} ${z/2 + 2} ${y/2}`" />
 
             <vgl-directional-light position="0 1 2" intensity="2" />
 
