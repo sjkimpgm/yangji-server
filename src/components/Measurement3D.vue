@@ -27,13 +27,13 @@
 
             <vgl-ambient-light color="#bbbbbb" intensity="1" />
 
-            <vgl-mesh-lambert-material name="mat_left" color="#cc2323" />
+            <vgl-mesh-lambert-material name="mat_left" color="#000055" />
             <vgl-box-geometry name="slab_left" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${-x/2-25} ${-y/2 + 2} ${-z/2}`" />
+            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${-x/2-25} ${-z/2 + 2} ${-y/2}`" />
 
-            <vgl-mesh-lambert-material name="mat_right" color="#2323cc" />
+            <vgl-mesh-lambert-material name="mat_right" color="#005500" />
             <vgl-box-geometry name="slab_right" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${x/2+25} ${y/2 + 2} ${z/2}`" />
+            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${x/2+25} ${z/2 + 2} ${y/2}`" />
 
             <vgl-directional-light position="0 1 2" intensity="2" />
 
@@ -115,8 +115,13 @@ export default {
       var idx = parseInt(this.idx * this.data.length / 100.0)
       console.log(idx)
 
-      this.x = this.data[idx].diff[0]
-      this.y = this.data[idx].diff[1]
+      // this.x = this.data[idx].diff[0]
+      // this.y = this.data[idx].diff[1]
+      // this.z = this.data[idx].diff[2]
+
+      // for this change, axis are changed
+      this.y = this.data[idx].diff[0]
+      this.x = this.data[idx].diff[1]
       this.z = this.data[idx].diff[2]
       this.current_time = this.data[idx].datetime
     },
