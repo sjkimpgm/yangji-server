@@ -50,11 +50,14 @@ class DeviceViewSet(viewsets.ModelViewSet):
 import datetime
 import random
 def generate_data(request):
-    for d in range(1, 32):
+    Measurement.objects.all().delete()
+
+    for d in range(1, 5):
         for h in range(0, 24):
-            date = datetime.datetime(2019, 5, d, h, 0, 0)
-            m = Measurement(datetime=date, measure_a=random.random(), measure_b=random.random(), measure_c=random.random(), measure_d=random.random())
-            m.save()
+            for minute in range(0, 59):
+                date = datetime.datetime(2019, 5, d, h, minute, 0)
+                m = Measurement(datetime=date, measure_a=random.random(), measure_b=random.random(), measure_c=random.random(), measure_d=random.random())
+                m.save()
 
 import json
 import numpy as np
