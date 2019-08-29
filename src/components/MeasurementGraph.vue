@@ -1,9 +1,20 @@
 <template>
   <div>
     <div>
-      <span>날짜 선택: </span>
-      <select v-model="selected" @change="onChange()">
+      <span>시작 날짜 선택: </span>
+      <select v-model="start_date" @change="onChangeStartDate()">
         <option v-for="option in dates">
+          {{ option }}
+        </option>
+      </select>
+
+      &nbsp;
+      &nbsp;
+      &nbsp;
+
+      <span>종료 날짜 선택: </span>
+      <select v-model="end_date" @change="onChangeEndDate()">
+        <option v-for="option in dates2">
           {{ option }}
         </option>
       </select>
@@ -48,8 +59,10 @@ export default {
   },
   data() {
     return {
-      selected: '--',
+      start_date: '--',
+      end_date: '--',
       dates: ['--'],
+      dates2: ['--'],
       chartData: null,
       check_x: true,
       check_y: true,
@@ -109,12 +122,24 @@ export default {
 
       vm.chartData = converted_data;
     },
+
+    onChangeStartDate() {
+      var vm = this;
+      vm.dates2 = ['--'];
+      vm.end_date = '--';
+
+      vm.dates.forEach(element => {
+        if(element >= vm.start_date) {
+          vm.dates2.push(element);
+        }
+      });
+    },
   
-    onChange() {
+    onChangeEndDate() {
       var vm = this;
 
       axios
-        .get('/api/measurement/?target_date=' + vm.selected)
+        .get('/api/measurement/?start_date=' + vm.start_date + '&end_date=' + vm.end_date)
         .then(function(response) {
           vm.origin_data = response.data
           vm.drawGraph()

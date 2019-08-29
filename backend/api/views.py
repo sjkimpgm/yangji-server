@@ -22,16 +22,32 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 class MeasurementViewSet(viewsets.ModelViewSet):
     serializer_class = MeasurementSerializer
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['datetime']
-    ordering = ['datetime']
+    #filter_backends = [filters.OrderingFilter]
+    #ordering_fields = ['datetime']
+    #ordering = ['datetime']
 
     def get_queryset(self):
         queryset = Measurement.objects.all()
         target_date = self.request.query_params.get('target_date', None)
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
         if target_date is not None:
             year, month, day = target_date.split('-')
             queryset = queryset.filter(datetime__date=datetime.date(int(year), int(month), int(day)))
+        elif start_date is not None and end_date is not None:
+            year, month, day = start_date.split('-')
+            start = datetime.date(int(year), int(month), int(day))
+
+            year, month, day = end_date.split('-')
+            end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
+
+            queryset = queryset.filter(datetime__range=(start, end))
+
+            stride = int(len(queryset) / 1000)
+            if stride < 1:
+                stride = 1
+
+            queryset = queryset[::stride]
         return queryset
 
 
