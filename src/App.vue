@@ -13,12 +13,14 @@
           <v-list-tile-title>계측값 표로 보기</v-list-tile-title>
         </v-list-tile>
 
+        <!--
         <v-list-tile to="/measurement_table_day">
           <v-list-tile-action>
             <v-icon>table_chart</v-icon>
           </v-list-tile-action>
           <v-list-tile-title>계측값 일별 보기</v-list-tile-title>
         </v-list-tile>
+        -->
         
         <v-list-tile to="/measurement_graph">
           <v-list-tile-action>
