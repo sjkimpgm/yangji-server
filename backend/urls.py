@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/calc_device/', views.calc_device),
 
     path('api/measurement_dates/', views.measurement_dates),
+    path('api/measurement_aggr/', views.measurement_aggr),
 ]
 
 

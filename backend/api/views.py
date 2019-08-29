@@ -58,6 +58,65 @@ def measurement_dates(request):
     return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
 
 
+def measurement_aggr(request):
+    start_date = request.GET.get('start_date', None)
+    end_date = request.GET.get('end_date', None)
+
+    if start_date is None or end_date is None:
+        return JsonResponse([], safe=False, status=status.HTTP_200_OK)
+
+    year, month, day = start_date.split('-')
+    start = datetime.date(int(year), int(month), int(day))
+
+    year, month, day = end_date.split('-')
+    end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
+
+    queryset = Measurement.objects.filter(datetime__range=(start, end))
+
+    aggr = {}
+    for r in queryset:
+        if r.datetime.date() not in aggr:
+            aggr[r.datetime.date()] = [r.diff[0], r.diff[0], r.diff[1], r.diff[1], r.diff[2], r.diff[2], r.diff[3], r.diff[3]]
+            continue
+        
+        date = aggr[r.datetime.date()]
+
+        # X
+        if r.diff[0] < date[0]:
+            date[0] = r.diff[0]
+            
+        if r.diff[0] > date[1]:
+            date[1] = r.diff[0]
+
+        # Y
+        if r.diff[1] < date[2]:
+            date[2] = r.diff[1]
+            
+        if r.diff[1] > date[3]:
+            date[3] = r.diff[1]
+
+        # Z
+        if r.diff[2] < date[4]:
+            date[4] = r.diff[2]
+            
+        if r.diff[2] > date[5]:
+            date[5] = r.diff[2]
+
+        # theta
+        if r.diff[3] < date[6]:
+            date[6] = r.diff[3]
+            
+        if r.diff[3] > date[7]:
+            date[7] = r.diff[3]
+    
+    ret = []
+    for k, v in aggr.items():
+        diff = [v[1] - v[0], v[3] - v[2], v[5] - v[4], v[7] - v[6]]
+        ret.append({"date": k, "values": v, "diff": diff})
+
+    return JsonResponse(ret, safe=False, status=status.HTTP_200_OK)
+
+
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer

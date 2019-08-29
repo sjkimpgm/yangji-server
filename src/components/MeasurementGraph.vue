@@ -137,6 +137,7 @@ export default {
   
     onChangeEndDate() {
       var vm = this;
+      vm.origin_data = []
 
       axios
         .get('/api/measurement/?start_date=' + vm.start_date + '&end_date=' + vm.end_date)

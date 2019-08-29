@@ -4,6 +4,7 @@ import VueDemo from '@/components/VueDemo'
 import Messages from '@/components/Messages'
 
 import MeasurementTable from '@/components/MeasurementTable'
+import MeasurementTableDay from '@/components/MeasurementTableDay'
 import MeasurementGraph from '@/components/MeasurementGraph'
 import Measurement3D from '@/components/Measurement3D'
 import DeviceSetup from '@/components/DeviceSetup'
@@ -27,6 +28,11 @@ export default new Router({
       path: '/measurement_table',
       name: 'measurement_table',
       component: MeasurementTable
+    },
+    {
+      path: '/measurement_table_day',
+      name: 'measurement_table_day',
+      component: MeasurementTableDay
     },
     {
       path: '/measurement_graph',
