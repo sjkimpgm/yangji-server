@@ -2,16 +2,8 @@ from django.db import models
 from rest_framework import serializers
 import math
 
-
-class Message(models.Model):
-    subject = models.CharField(max_length=200)
-    body = models.TextField()
-
-
-class MessageSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Message
-        fields = ('url', 'subject', 'body', 'pk')
+from django.dispatch import receiver
+from django.db.models.signals import pre_save
 
 
 class Measurement(models.Model):
@@ -23,7 +15,11 @@ class Measurement(models.Model):
     measure_c = models.FloatField()
     measure_d = models.FloatField()
 
-    @property
+    diff_x = models.FloatField(null=True, blank=True)
+    diff_y = models.FloatField(null=True, blank=True)
+    diff_z = models.FloatField(null=True, blank=True)
+    diff_a = models.FloatField(null=True, blank=True)
+
     def diff(self):
         device = Device.objects.all()[0]
 
@@ -57,17 +53,28 @@ class Measurement(models.Model):
         return (sum(x), sum(y), sum(z), sum(a) * 180 / math.pi)
         
     def __str__(self):
-        x, y, z, a = self.diff
+        x = self.diff_x if self.diff_x else 0
+        y = self.diff_y if self.diff_y else 0
+        z = self.diff_z if self.diff_z else 0
+        a = self.diff_a if self.diff_a else 0
 
         return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f} / {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d, x, y, z, a)
 
+@receiver(pre_save, sender=Measurement)
+def measurement_pre_save_callback(sender, **kwargs):
+    data = kwargs['instance']
+    x, y, z, a = data.diff()
+    data.diff_x = x
+    data.diff_y = y
+    data.diff_z = z
+    data.diff_a = a
 
 class MeasurementSerializer(serializers.ModelSerializer):
     datetime = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
         model = Measurement
-        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d', 'diff')
+        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d', 'diff_x', 'diff_y', 'diff_z', 'diff_a')
 
 
 class Device(models.Model):

@@ -115,14 +115,10 @@ export default {
       var idx = parseInt(this.idx * this.data.length / 100.0)
       console.log(idx)
 
-      // this.x = this.data[idx].diff[0]
-      // this.y = this.data[idx].diff[1]
-      // this.z = this.data[idx].diff[2]
-
       // for this change, axis are changed
-      this.y = this.data[idx].diff[0]
-      this.x = this.data[idx].diff[1]
-      this.z = this.data[idx].diff[2]
+      this.y = this.data[idx].diff_x
+      this.x = this.data[idx].diff_y
+      this.z = this.data[idx].diff_z
       this.current_time = this.data[idx].datetime
     },
 

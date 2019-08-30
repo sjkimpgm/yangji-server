@@ -10,10 +10,10 @@
     <el-table height="600" :data="tableData">
 
       <el-table-column prop="datetime" label="DateTime" width="200" sortable />
-      <el-table-column prop="diff[0]" label="X" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[1]" label="Y" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[2]" label="Z" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[3]" label="theta" width="90" :formatter="measurement_formatter" />
+      <el-table-column prop="diff_x" label="X" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_y" label="Y" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_z" label="Z" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_a" label="theta" width="90" :formatter="measurement_formatter" />
       <el-table-column prop="measure_a" label="A" width="90" :formatter="measurement_formatter" /> 
       <el-table-column prop="measure_b" label="B" width="90" :formatter="measurement_formatter" /> 
       <el-table-column prop="measure_c" label="C" width="90" :formatter="measurement_formatter" /> 

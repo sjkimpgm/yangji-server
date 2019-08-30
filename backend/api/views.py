@@ -5,26 +5,18 @@ from django.http import JsonResponse
 from rest_framework import viewsets, status, filters
 
 
-from .models import Message, MessageSerializer, Measurement, MeasurementSerializer, Device, DeviceSerializer
+from .models import Measurement, MeasurementSerializer, Device, DeviceSerializer
 
 
 # Serve Vue Application
 index_view = never_cache(TemplateView.as_view(template_name='index.html'))
 
 
-class MessageViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows messages to be viewed or edited.
-    """
-    queryset = Message.objects.all()
-    serializer_class = MessageSerializer
-
-
 class MeasurementViewSet(viewsets.ModelViewSet):
     serializer_class = MeasurementSerializer
-    #filter_backends = [filters.OrderingFilter]
-    #ordering_fields = ['datetime']
-    #ordering = ['datetime']
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['datetime']
+    ordering = ['datetime']
 
     def get_queryset(self):
         queryset = Measurement.objects.all()
@@ -47,8 +39,16 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             if stride < 1:
                 stride = 1
 
-            queryset = queryset[::stride]
+            # queryset = queryset[::stride]
         return queryset
+
+def measurement_fill_diff(request):
+    measurements = Measurement.objects.filter(diff_a__isnull=True)
+
+    for m in measurements:
+        m.save()
+
+    return JsonResponse({'result':'OK'}, safe=False, status=status.HTTP_200_OK)
 
 
 def measurement_dates(request):

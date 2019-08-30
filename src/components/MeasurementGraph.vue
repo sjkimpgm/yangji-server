@@ -108,10 +108,10 @@ export default {
       
       for(let m of vm.origin_data) {
         let array_m = [new Date(m.datetime)]
-        if(vm.check_x) array_m.push(m.diff[0])
-        if(vm.check_y) array_m.push(m.diff[1])
-        if(vm.check_z) array_m.push(m.diff[2])
-        if(vm.check_theta) array_m.push(m.diff[3])
+        if(vm.check_x) array_m.push(m.diff_x)
+        if(vm.check_y) array_m.push(m.diff_y)
+        if(vm.check_z) array_m.push(m.diff_z)
+        if(vm.check_theta) array_m.push(m.diff_a)
         if(vm.check_a) array_m.push(m.measure_a)
         if(vm.check_b) array_m.push(m.measure_b)
         if(vm.check_c) array_m.push(m.measure_c)

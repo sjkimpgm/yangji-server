@@ -9,10 +9,9 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .api import views
-from .api.views import index_view, MessageViewSet, MeasurementViewSet, DeviceViewSet
+from .api.views import index_view, MeasurementViewSet, DeviceViewSet
 
 router = routers.DefaultRouter()
-router.register('messages', MessageViewSet)
 router.register('measurement', MeasurementViewSet, base_name="measurement")
 router.register('device', DeviceViewSet)
 
@@ -32,6 +31,7 @@ urlpatterns = [
 
     path('api/measurement_dates/', views.measurement_dates),
     path('api/measurement_aggr/', views.measurement_aggr),
+    path('api/measurement_fill_diff/', views.measurement_fill_diff),
 ]
 
 
