@@ -4,8 +4,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from rest_framework import viewsets, status, filters
 
-
 from .models import Measurement, MeasurementSerializer, Device, DeviceSerializer
+
+from django.db.models.functions import TruncDate
+from django.db.models import Min, Max, F
 
 
 # Serve Vue Application
@@ -72,49 +74,23 @@ def measurement_aggr(request):
     end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
 
     queryset = Measurement.objects.filter(datetime__range=(start, end))
+    result = queryset.annotate(date=TruncDate('datetime')).values('date').annotate(
+        min_x = Min('diff_x'), max_x = Max('diff_x'),
+        min_y = Min('diff_y'), max_y = Max('diff_y'),
+        min_z = Min('diff_z'), max_z = Max('diff_z'),
+        min_a = Min('diff_a'), max_a = Max('diff_a'),
+    ).annotate(
+            diff_x=F('max_x') - F('min_x'),
+            diff_y=F('max_y') - F('min_y'),
+            diff_z=F('max_z') - F('min_z'),
+            diff_a=F('max_a') - F('min_a'),
+    ).order_by('date')
 
-    aggr = {}
-    for r in queryset:
-        if r.datetime.date() not in aggr:
-            aggr[r.datetime.date()] = [r.diff[0], r.diff[0], r.diff[1], r.diff[1], r.diff[2], r.diff[2], r.diff[3], r.diff[3]]
-            continue
-        
-        date = aggr[r.datetime.date()]
+    result = list(result)
+    for r in result:
+        r['date'] = r['date'].strftime("%Y-%m-%d")
 
-        # X
-        if r.diff[0] < date[0]:
-            date[0] = r.diff[0]
-            
-        if r.diff[0] > date[1]:
-            date[1] = r.diff[0]
-
-        # Y
-        if r.diff[1] < date[2]:
-            date[2] = r.diff[1]
-            
-        if r.diff[1] > date[3]:
-            date[3] = r.diff[1]
-
-        # Z
-        if r.diff[2] < date[4]:
-            date[4] = r.diff[2]
-            
-        if r.diff[2] > date[5]:
-            date[5] = r.diff[2]
-
-        # theta
-        if r.diff[3] < date[6]:
-            date[6] = r.diff[3]
-            
-        if r.diff[3] > date[7]:
-            date[7] = r.diff[3]
-    
-    ret = []
-    for k, v in aggr.items():
-        diff = [v[1] - v[0], v[3] - v[2], v[5] - v[4], v[7] - v[6]]
-        ret.append({"date": k, "values": v, "diff": diff})
-
-    return JsonResponse(ret, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(result, safe=False, status=status.HTTP_200_OK)
 
 
 class DeviceViewSet(viewsets.ModelViewSet):

@@ -23,18 +23,18 @@
     <el-table height="600" :data="tableData">
 
       <el-table-column prop="date" label="DateTime" width="200" sortable />
-      <el-table-column prop="values[0]" label="min(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[1]" label="max(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[0]" label="diff(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[2]" label="min(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[3]" label="max(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[1]" label="diff(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[4]" label="min(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[5]" label="max(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff[2]" label="diff(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="values[6]" label="min(θ)" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="values[7]" label="max(θ)" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="diff[3]" label="diff(θ)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="min_x" label="min(X)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="max_x" label="max(X)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_x" label="diff(X)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="min_y" label="min(Y)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="max_y" label="max(Y)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_y" label="diff(Y)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="min_z" label="min(Z)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="max_z" label="max(Z)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="diff_z" label="diff(Z)" width="90" :formatter="measurement_formatter" /> 
+      <el-table-column prop="min_a" label="min(θ)" width="90" :formatter="measurement_formatter" />
+      <el-table-column prop="max_a" label="max(θ)" width="90" :formatter="measurement_formatter" />
+      <el-table-column prop="diff_a" label="diff(θ)" width="90" :formatter="measurement_formatter" /> 
 
     </el-table>
   </div>
