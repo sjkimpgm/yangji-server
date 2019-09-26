@@ -50,12 +50,16 @@
       &nbsp;
       <input type="checkbox" id="check_d" v-model="check_d" @change="drawGraph()"><label for="check_d">D</label>
     </div>
-
+    <div>
+      <label>{{selected_label}}의 최소값: {{selected_min}} / 최대값: {{selected_max}}</label>
+    </div>
 
     <GChart
       type="LineChart"
       :data="chartData"
       :options="chartOptions"
+      :events="chartEvents" 
+      ref="gChart"
     />
   </div>
 </template>
@@ -69,6 +73,7 @@ export default {
     GChart
   },
   data() {
+    var vm = this;
     return {
       device: '--',
       selected_device: null,
@@ -86,6 +91,11 @@ export default {
       check_b: false,
       check_c: false,
       check_d: false,
+      value_min: null,
+      value_max: null,
+      selected_min: null,
+      selected_max: null,
+      selected_label: null,
       origin_data: [],
       chartOptions: {
         height: 600,
@@ -97,6 +107,23 @@ export default {
         },
         timeline: { groupByRowLabel: true },
         explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 0.05, maxZoomOut: 1 },
+        lineWidth: 4,
+      },
+      chartEvents: {
+        select: () => {
+          const table = this.$refs.gChart.chartObject;
+          const selection = table.getSelection();          
+          if(selection.length == 0) {
+            vm.selected_max = null;
+            vm.selected_min = null;
+            return;
+          }
+
+          var chart_idx = selection[0].column-1;
+          vm.selected_label = vm.chartData[0][chart_idx+1];
+          vm.selected_min = vm.value_min[chart_idx].toFixed(3);
+          vm.selected_max = vm.value_max[chart_idx].toFixed(3);
+        }
       }
     }
   },
@@ -109,28 +136,32 @@ export default {
       var vm = this;
 
       var converted_data = ['datetime']
-      if(vm.check_x) converted_data.push('X')
-      if(vm.check_y) converted_data.push('Y')
-      if(vm.check_z) converted_data.push('Z')
-      if(vm.check_theta) converted_data.push('Theta')
-      if(vm.check_a) converted_data.push('A')
-      if(vm.check_b) converted_data.push('B')
-      if(vm.check_c) converted_data.push('C')
-      if(vm.check_d) converted_data.push('D')
+      var checked_count = 0;
+      if(vm.check_x) { converted_data.push('X'); checked_count += 1; }
+      if(vm.check_y) { converted_data.push('Y'); checked_count += 1; }
+      if(vm.check_z) { converted_data.push('Z'); checked_count += 1; }
+      if(vm.check_theta) { converted_data.push('Theta');  checked_count += 1; }
+      if(vm.check_a) { converted_data.push('A'); checked_count += 1; }
+      if(vm.check_b) { converted_data.push('B'); checked_count += 1; }
+      if(vm.check_c) { converted_data.push('C'); checked_count += 1; }
+      if(vm.check_d) { converted_data.push('D'); checked_count += 1; }
+
+      vm.value_min = Array(checked_count).fill(Number.MAX_VALUE);
+      vm.value_max = Array(checked_count).fill(Number.MIN_VALUE);
 
       converted_data = [converted_data]
       
       for(let m of vm.origin_data) {
         let array_m = [new Date(m.datetime)]
-        if(vm.check_x) array_m.push(m.diff_x)
-        if(vm.check_y) array_m.push(m.diff_y)
-        if(vm.check_z) array_m.push(m.diff_z)
-        if(vm.check_theta) array_m.push(m.diff_a)
-        if(vm.check_a) array_m.push(m.measure_a)
-        if(vm.check_b) array_m.push(m.measure_b)
-        if(vm.check_c) array_m.push(m.measure_c)
-        if(vm.check_d) array_m.push(m.measure_d)
-
+        var i = 0;
+        if(vm.check_x) { array_m.push(m.diff_x); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_x); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_x); i += 1;}
+        if(vm.check_y) { array_m.push(m.diff_y); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_y); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_y); i += 1;}
+        if(vm.check_z) { array_m.push(m.diff_z); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_z); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_z); i += 1;}
+        if(vm.check_theta) {array_m.push(m.diff_a); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_a); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_a); i += 1;}
+        if(vm.check_a) { array_m.push(m.measure_a); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_a); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_a); i += 1;}
+        if(vm.check_b) { array_m.push(m.measure_b); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_b); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_b); i += 1;}
+        if(vm.check_c) { array_m.push(m.measure_c); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_c); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_c); i += 1;}
+        if(vm.check_d) { array_m.push(m.measure_d); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_d); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_d); i += 1;}
         converted_data.push(array_m);
       }
 
