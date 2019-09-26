@@ -112,6 +112,7 @@ export default {
         .get('/api/measurement_recent/?last_time=' + last_time)
         .then(function(response) {
           vm.origin_data = vm.origin_data.concat(response.data)
+          vm.origin_data = vm.origin_data.slice(vm.origin_data.length - 300)
           vm.drawGraph()
         });
     },
