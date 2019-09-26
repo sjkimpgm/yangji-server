@@ -79,6 +79,8 @@ class MeasurementSerializer(serializers.ModelSerializer):
 
 class Device(models.Model):
     name = models.CharField(max_length=20) # same as device_id
+    device_id = models.CharField(max_length=17)
+    device_type = models.CharField(max_length=17, default="default")
 
     V_A0 = models.FloatField(default=0.0)
     V_B0 = models.FloatField(default=0.0)
@@ -152,4 +154,4 @@ class Device(models.Model):
 class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
-        fields = '__all__'
+        fields = ('name', 'device_id')

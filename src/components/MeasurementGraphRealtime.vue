@@ -1,6 +1,14 @@
 <template>
   <div>
     <div>
+      <span>계측기 선택: </span>
+      <select v-model="device" @change="onChangeDevice()">
+        <option v-for="option in devices">
+          {{ option.name }}
+        </option>
+      </select>
+    </div>
+    <div>
       <input type="checkbox" id="check_x" v-model="check_x" @change="drawGraph()"><label for="check_x">X</label>
       &nbsp;
       <input type="checkbox" id="check_y" v-model="check_y" @change="drawGraph()"><label for="check_y">Y</label>
@@ -39,12 +47,11 @@ export default {
   },
   data() {
     return {
+      device: '--',
+      selected_device: null,
+      devices: ['--'],
       origin_data: [],
       timer: null, 
-      start_date: '--',
-      end_date: '--',
-      dates: ['--'],
-      dates2: ['--'],
       chartData: null,
       check_x: true,
       check_y: true,
@@ -109,7 +116,7 @@ export default {
       var last_time = this.origin_data[this.origin_data.length-1].datetime;
 
       axios
-        .get('/api/measurement_recent/?last_time=' + last_time)
+        .get('/api/measurement_recent/?device_id=' + vm.selected_device.device_id + '&last_time=' + last_time)
         .then(function(response) {
           vm.origin_data = vm.origin_data.concat(response.data)
           vm.origin_data = vm.origin_data.slice(vm.origin_data.length - 300)
@@ -140,24 +147,53 @@ export default {
 
       return year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec
     },
+
+    onChangeDevice() {
+      var vm = this;
+      vm.stop();
+
+      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
+
+      var now = new Date();
+      now.setMinutes(now.getMinutes() - 3);
+      var now_str = this.date_format(now);
+
+      axios
+        .get('/api/measurement_recent/?device_id=' + vm.selected_device.device_id + '&last_time=' + now_str)
+        .then(function(response) {
+          vm.origin_data = response.data
+          vm.drawGraph()
+
+          vm.start();
+        });
+    },
   },
 
+  // mounted() {
+  //   var vm = this;
+
+  //   var now = new Date();
+  //   now.setMinutes(now.getMinutes() - 3);
+  //   var now_str = this.date_format(now);
+
+  //   axios
+  //     .get('/api/measurement_recent/?last_time=' + now_str)
+  //     .then(function(response) {
+  //       vm.origin_data = response.data
+  //       vm.drawGraph()
+
+  //       vm.start();
+  //     });
+  // }, 
   mounted() {
     var vm = this;
 
-    var now = new Date();
-    now.setMinutes(now.getMinutes() - 3);
-    var now_str = this.date_format(now);
-
     axios
-      .get('/api/measurement_recent/?last_time=' + now_str)
+      .get('/api/device/')
       .then(function(response) {
-        vm.origin_data = response.data
-        vm.drawGraph()
-
-        vm.start();
+        vm.devices = [{'name': '--'}].concat(response.data);
       });
-  }, 
+  },
 
   beforeDestroy() {
     this.stop();

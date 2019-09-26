@@ -24,9 +24,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Measurement.objects.all()
+        device_id = self.request.query_params.get('device_id', None)
         target_date = self.request.query_params.get('target_date', None)
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
+
+        if device_id is not None:
+            queryset = queryset.filter(device_id=device_id)
+
         if target_date is not None:
             year, month, day = target_date.split('-')
             queryset = queryset.filter(datetime__date=datetime.date(int(year), int(month), int(day)))
@@ -56,20 +61,30 @@ def measurement_fill_diff(request):
 
 
 def measurement_dates(request):
-    dates = Measurement.objects.values('datetime')
+    dates = Measurement.objects
+
+    device_id = request.GET.get('device_id', None)
+    if device_id is not None:
+        dates = dates.filter(device_id=device_id)
+
+    dates = dates.values('datetime')
     distinct_dates = {d['datetime'].date() for d in dates}
     distinct_dates = sorted(list(distinct_dates))
     return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
 
 def measurement_recent(request):
+    device_id = request.GET.get('device_id', None)
     last_time = request.GET.get('last_time', None)
+
+    if device_id == None:
+        return HttpResponseBadRequest("message: need device_id parameter")
 
     if last_time == None:
         return HttpResponseBadRequest("message: need last_time parameter")
 
     last_time = datetime.datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')
 
-    data = Measurement.objects.filter(datetime__gt=last_time).order_by('datetime').all()
+    data = Measurement.objects.filter(device_id=device_id, datetime__gt=last_time).order_by('datetime').all()
 
     serializer = MeasurementSerializer(data, many=True)
 
@@ -77,11 +92,15 @@ def measurement_recent(request):
 
 
 def measurement_aggr(request):
+    device_id = request.GET.get('device_id', None)
     start_date = request.GET.get('start_date', None)
     end_date = request.GET.get('end_date', None)
 
+    if device_id is None:
+        return HttpResponseBadRequest("message: need 'device_id' parameter")
+
     if start_date is None or end_date is None:
-        return JsonResponse([], safe=False, status=status.HTTP_200_OK)
+        return HttpResponseBadRequest("message: need 'start_date' and 'end_date' parameter")
 
     year, month, day = start_date.split('-')
     start = datetime.date(int(year), int(month), int(day))
@@ -89,7 +108,7 @@ def measurement_aggr(request):
     year, month, day = end_date.split('-')
     end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
 
-    queryset = Measurement.objects.filter(datetime__range=(start, end))
+    queryset = Measurement.objects.filter(device_id=device_id, datetime__range=(start, end))
     result = queryset.annotate(date=TruncDate('datetime')).values('date').annotate(
         min_x = Min('diff_x'), max_x = Max('diff_x'),
         min_y = Min('diff_y'), max_y = Max('diff_y'),

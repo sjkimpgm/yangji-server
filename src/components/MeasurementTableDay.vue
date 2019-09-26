@@ -1,6 +1,17 @@
 <template>
   <div>
     <div>
+      <span>계측기 선택: </span>
+      <select v-model="device" @change="onChangeDevice()">
+        <option v-for="option in devices">
+          {{ option.name }}
+        </option>
+      </select>
+
+      &nbsp;
+      &nbsp;
+      &nbsp;
+
       <span>시작 날짜 선택: </span>
       <select v-model="start_date" @change="onChangeStartDate()">
         <option v-for="option in dates">
@@ -47,6 +58,9 @@ import axios from 'axios'
 export default {
   data() {
     return {
+      device: '--',
+      selected_device: null,
+      devices: ['--'],
       start_date: '--',
       end_date: '--',
       dates: ['--'],
@@ -60,6 +74,7 @@ export default {
     },
     onChangeStartDate() {
       var vm = this;
+      vm.tableData = [];
       vm.dates2 = ['--'];
       vm.end_date = '--';
 
@@ -69,26 +84,44 @@ export default {
         }
       });
     },
+
     onChangeEndDate() {
       var vm = this;
       vm.tableData = [];
 
       axios
-        .get('/api/measurement_aggr/?start_date=' + vm.start_date + '&end_date=' + vm.end_date)
+        .get('/api/measurement_aggr/?device_id=' + vm.selected_device.device_id + '&start_date=' + vm.start_date + '&end_date=' + vm.end_date)
         .then(function(response) {
           vm.tableData = response.data;
         });
-    }
+    }, 
+
+    onChangeDevice() {
+      var vm = this;
+      vm.tableData = [];
+      vm.start_date =  '--'
+      vm.end_date = '--'
+      vm.dates = ['--']
+      vm.dates2 = ['--']
+
+      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
+
+      axios
+        .get('/api/measurement_dates/?device_id=' + vm.selected_device.device_id)
+        .then(function(response) {
+          vm.dates = ['--'].concat(response.data);
+        });
+    },
   },
+
   mounted() {
     var vm = this;
 
     axios
-      .get('/api/measurement_dates/')
+      .get('/api/device/')
       .then(function(response) {
-        vm.dates = ['--'].concat(response.data);
+        vm.devices = [{'name': '--'}].concat(response.data);
       });
-
   }
 };
 </script>

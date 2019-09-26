@@ -1,6 +1,17 @@
 <template>
   <div>
     <div>
+      <span>계측기 선택: </span>
+      <select v-model="device" @change="onChangeDevice()">
+        <option v-for="option in devices">
+          {{ option.name }}
+        </option>
+      </select>
+
+      &nbsp;
+      &nbsp;
+      &nbsp;
+
       <span>날짜 선택: </span>
       <select v-model="selected" @change="onChange()">
         <option v-for="option in dates">
@@ -63,6 +74,9 @@ export default {
   },
   data() {
     return {
+      device: '--',
+      selected_device: null,
+      devices: ['--'],
       selected: '--',
       dates: ['--'],
       current_time: null,
@@ -99,11 +113,12 @@ export default {
 
     onChange() {
       var vm = this;
+      vm.stop();
 
       this.idx = 0;
 
       axios
-        .get('/api/measurement/?target_date=' + vm.selected)
+        .get('/api/measurement/?device_id=' + vm.selected_device.device_id + '&target_date=' + vm.selected)
         .then(function(response) {
           vm.data = response.data
         });
@@ -183,15 +198,31 @@ export default {
       // disable parent scroll
       event.stopPropagation()
       event.preventDefault()
-    }
+    }, 
+    onChangeDevice() {
+      var vm = this;
+      vm.dates = ['--'];
+      vm.selected = '--';
+
+      vm.stop();
+
+      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
+
+      axios
+        .get('/api/measurement_dates/?device_id=' + vm.selected_device.device_id)
+        .then(function(response) {
+          vm.dates = ['--'].concat(response.data);
+        });
+    },
   },
+
   mounted() {
     var vm = this;
 
     axios
-      .get('/api/measurement_dates/')
+      .get('/api/device/')
       .then(function(response) {
-        vm.dates = ['--'].concat(response.data);
+        vm.devices = [{'name': '--'}].concat(response.data);
       });
   },
 
