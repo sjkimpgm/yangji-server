@@ -71,7 +71,16 @@ class Measurement(models.Model):
         z = [delta[i] * inv_C[i] for i in range(4)]
         a = [delta[i] * inv_D[i] for i in range(4)]
 
-        return (sum(x), sum(y), sum(z), sum(a) * 180 / math.pi)
+        # FIXME(sjkim): just workaround for demo
+        x = sum(x)
+        y = sum(y)
+        z = sum(z)
+        a = sum(a) * 180 / math.pi
+
+        a -= z/ 0.25 * 0.15
+        z *= 2
+
+        return (x, y, z, a)
         
     def __str__(self):
         x = self.diff_x if self.diff_x else 0
