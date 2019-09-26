@@ -6,6 +6,7 @@ import Messages from '@/components/Messages'
 import MeasurementTable from '@/components/MeasurementTable'
 import MeasurementTableDay from '@/components/MeasurementTableDay'
 import MeasurementGraph from '@/components/MeasurementGraph'
+import MeasurementGraphRealtime from '@/components/MeasurementGraphRealtime'
 import Measurement3D from '@/components/Measurement3D'
 import DeviceSetup from '@/components/DeviceSetup'
 import ChangeMeasurement from '@/components/ChangeMeasurement'
@@ -38,6 +39,11 @@ export default new Router({
       path: '/measurement_graph',
       name: 'measurement_graph',
       component: MeasurementGraph
+    },
+    {
+      path: '/measurement_graph_realtime',
+      name: 'measurement_graph_realtime',
+      component: MeasurementGraphRealtime
     },
     {
       path: '/measurement_3d',

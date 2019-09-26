@@ -193,6 +193,10 @@ export default {
       .then(function(response) {
         vm.dates = ['--'].concat(response.data);
       });
+  },
+
+  beforeDestroy() {
+    this.stop();
   }
 };
 </script>

@@ -27,6 +27,13 @@
           <v-list-tile-title>계측값 그래프로 보기</v-list-tile-title>
         </v-list-tile>
 
+        <v-list-tile to="/measurement_graph_realtime">
+          <v-list-tile-action>
+            <v-icon>insert_chart</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-title>계측값 실시간 그래프로 보기</v-list-tile-title>
+        </v-list-tile>
+
         <v-list-tile to="measurement_3d">
           <v-list-tile-action>
             <v-icon>layers</v-icon>

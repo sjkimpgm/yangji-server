@@ -1,14 +1,16 @@
 from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from rest_framework import viewsets, status, filters
+from rest_framework.renderers import JSONRenderer
 
 from .models import Measurement, MeasurementSerializer, Device, DeviceSerializer
 
 from django.db.models.functions import TruncDate
 from django.db.models import Min, Max, F
 
+import datetime
 
 # Serve Vue Application
 index_view = never_cache(TemplateView.as_view(template_name='index.html'))
@@ -58,6 +60,20 @@ def measurement_dates(request):
     distinct_dates = {d['datetime'].date() for d in dates}
     distinct_dates = sorted(list(distinct_dates))
     return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
+
+def measurement_recent(request):
+    last_time = request.GET.get('last_time', None)
+
+    if last_time == None:
+        return HttpResponseBadRequest("message: need last_time parameter")
+
+    last_time = datetime.datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')
+
+    data = Measurement.objects.filter(datetime__gt=last_time).order_by('datetime').all()
+
+    serializer = MeasurementSerializer(data, many=True)
+
+    return JsonResponse(serializer.data, safe=False, status=status.HTTP_200_OK)
 
 
 def measurement_aggr(request):
