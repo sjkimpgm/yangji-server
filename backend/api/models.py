@@ -21,8 +21,14 @@ class Measurement(models.Model):
     diff_a = models.FloatField(null=True, blank=True)
 
     def diff(self):
-        device = Device.objects.all()[0]
+        device = Device.objects.filter(device_id=self.device_id)[0]
 
+        if device.device_type == "default":
+            return self.diff_default(device)
+        elif device.device_type == "adv_v3":
+            return self.diff_adv_v3(device)
+
+    def diff_default(self, device):
         V = [self.measure_a, self.measure_b, self.measure_c, self.measure_d]
 
         F_a = [device.f_Aa, device.f_Ba, device.f_Ca, device.f_Da]
@@ -39,6 +45,21 @@ class Measurement(models.Model):
         L_0 = [F_0[i] + Lk[i] for i in range(4)]
 
         delta = [L[i] - L_0[i] for i in range(4)]
+
+        inv_A = [device.inv00, device.inv01, device.inv02, device.inv03]
+        inv_B = [device.inv10, device.inv11, device.inv12, device.inv13]
+        inv_C = [device.inv20, device.inv21, device.inv22, device.inv23]
+        inv_D = [device.inv30, device.inv31, device.inv32, device.inv33]
+
+        x = [delta[i] * inv_A[i] for i in range(4)]
+        y = [delta[i] * inv_B[i] for i in range(4)]
+        z = [delta[i] * inv_C[i] for i in range(4)]
+        a = [delta[i] * inv_D[i] for i in range(4)]
+
+        return (sum(x), sum(y), sum(z), sum(a) * 180 / math.pi)
+
+    def diff_adv_v3(self, device):
+        delta = [self.measure_a, self.measure_b, self.measure_c, self.measure_d]
 
         inv_A = [device.inv00, device.inv01, device.inv02, device.inv03]
         inv_B = [device.inv10, device.inv11, device.inv12, device.inv13]
