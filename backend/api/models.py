@@ -77,9 +77,6 @@ class Measurement(models.Model):
         z = sum(z)
         a = sum(a) * 180 / math.pi
 
-        a -= z/ 0.25 * 0.15
-        z *= 2
-
         return (x, y, z, a)
         
     def __str__(self):
