@@ -51,7 +51,7 @@ export default {
   },
   methods: {
     measurement_formatter(row, column, value) {
-      return value.toFixed(3);
+      return value.toFixed(1);
     },
     onChangeDate(event) {
       var vm = this;

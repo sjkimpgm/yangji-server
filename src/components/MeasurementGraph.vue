@@ -121,15 +121,15 @@ export default {
 
           var chart_idx = selection[0].column-1;
           vm.selected_label = vm.chartData[0][chart_idx+1];
-          vm.selected_min = vm.value_min[chart_idx].toFixed(3);
-          vm.selected_max = vm.value_max[chart_idx].toFixed(3);
+          vm.selected_min = vm.value_min[chart_idx].toFixed(1);
+          vm.selected_max = vm.value_max[chart_idx].toFixed(1);
         }
       }
     }
   },
   methods: {
     measurement_formatter(row, column, value) {
-      return value.toFixed(3);
+      return value.toFixed(1);
     },
 
     drawGraph() {
