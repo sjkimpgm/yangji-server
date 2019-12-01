@@ -18,6 +18,13 @@
       <input type="checkbox" id="check_theta" v-model="check_theta" @change="drawGraph()"><label for="check_x">Theta</label>
     </div>
 
+    <div>
+      <el-alert type="warning" title="X축 값이 정상범위를 벗어났습니다." v-if="error_x" />
+      <el-alert type="warning" title="Y축 값이 정상범위를 벗어났습니다." v-if="error_y" />
+      <el-alert type="warning" title="Z축 값이 정상범위를 벗어났습니다." v-if="error_z" />
+      <el-alert type="warning" title="θ축 값이 정상범위를 벗어났습니다." v-if="error_theta" />
+    </div>
+
 
     <GChart
       type="LineChart"
@@ -47,6 +54,10 @@ export default {
       check_y: true,
       check_z: true,
       check_theta: true,
+      error_x: false,
+      error_y: false,
+      error_z: false,
+      error_theta: false,
       chartOptions: {
         height: 600,
         curveType: 'function',
@@ -139,10 +150,30 @@ export default {
       
       for(let m of vm.origin_data) {
         let array_m = [new Date(m.datetime)]
-        if(vm.check_x) array_m.push(m.diff_x)
-        if(vm.check_y) array_m.push(m.diff_y)
-        if(vm.check_z) array_m.push(m.diff_z)
-        if(vm.check_theta) array_m.push(m.diff_a)
+        if(vm.check_x) { 
+          array_m.push(m.diff_x)
+          if(m.diff_x < vm.selected_device.x_min || m.diff_x > vm.selected_device.x_max) {
+            vm.error_x = true
+          }
+        }
+        if(vm.check_y) {
+          array_m.push(m.diff_y)
+          if(m.diff_y < vm.selected_device.y_min || m.diff_y > vm.selected_device.y_max) {
+            vm.error_y = true
+          }
+        }
+        if(vm.check_z) {
+          array_m.push(m.diff_z)
+          if(m.diff_z < vm.selected_device.z_min || m.diff_z > vm.selected_device.z_max) {
+            vm.error_z = true
+          }
+        }
+        if(vm.check_theta) {
+          array_m.push(m.diff_a)
+          if(m.diff_theta < vm.selected_device.t_min || m.diff_theta > vm.selected_device.t_max) {
+            vm.error_theta = true
+          }
+        }
 
         if(vm.check_x) {
           array_m.push(vm.selected_device.x_max)
