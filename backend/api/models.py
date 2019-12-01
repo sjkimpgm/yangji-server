@@ -178,7 +178,17 @@ class Device(models.Model):
     inv32 = models.FloatField(default=0.0)
     inv33 = models.FloatField(default=0.0)
 
+    x_min = models.FloatField(default=-10.0)
+    y_min = models.FloatField(default=-10.0)
+    z_min = models.FloatField(default=-10.0)
+    t_min = models.FloatField(default=-10.0)
+
+    x_max = models.FloatField(default=10.0)
+    y_max = models.FloatField(default=10.0)
+    z_max = models.FloatField(default=10.0)
+    t_max = models.FloatField(default=10.0)
+
 class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
-        fields = ('name', 'device_id')
+        fields = ('name', 'device_id', 'x_min', 'y_min', 'z_min', 't_min', 'x_max', 'y_max', 'z_max', 't_max')

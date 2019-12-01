@@ -3,7 +3,7 @@
     <div>
       <span>계측기 선택: </span>
       <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices">
+        <option v-for="option in devices" :key="option.name">
           {{ option.name }}
         </option>
       </select>
@@ -100,22 +100,6 @@ export default {
     },
   },
 
-  // mounted() {
-  //   var vm = this;
-
-  //   var now = new Date();
-  //   now.setMinutes(now.getMinutes() - 3);
-  //   var now_str = this.date_format(now);
-
-  //   axios
-  //     .get('/api/measurement_recent/?last_time=' + now_str)
-  //     .then(function(response) {
-  //       vm.origin_data = response.data
-  //       vm.drawGraph()
-
-  //       vm.start();
-  //     });
-  // }, 
   mounted() {
     var vm = this;
 

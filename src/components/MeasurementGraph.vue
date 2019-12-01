@@ -3,7 +3,7 @@
     <div>
       <span>계측기 선택: </span>
       <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices">
+        <option v-for="option in devices" :key="option.name">
           {{ option.name }}
         </option>
       </select>
@@ -14,7 +14,7 @@
 
       <span>시작 날짜 선택: </span>
       <select v-model="start_date" @change="onChangeStartDate()">
-        <option v-for="option in dates">
+        <option v-for="option in dates" :key="option">
           {{ option }}
         </option>
       </select>
@@ -25,7 +25,7 @@
 
       <span>종료 날짜 선택: </span>
       <select v-model="end_date" @change="onChangeEndDate()">
-        <option v-for="option in dates2">
+        <option v-for="option in dates2" :key="option">
           {{ option }}
         </option>
       </select>
@@ -39,16 +39,6 @@
       <input type="checkbox" id="check_z" v-model="check_z" @change="drawGraph()"><label for="check_z">Z</label>
       &nbsp;
       <input type="checkbox" id="check_theta" v-model="check_theta" @change="drawGraph()"><label for="check_x">Theta</label>
-      &nbsp;
-      <span>/</span>
-      &nbsp;
-      <input type="checkbox" id="check_a" v-model="check_a" @change="drawGraph()"><label for="check_a">A</label>
-      &nbsp;
-      <input type="checkbox" id="check_b" v-model="check_b" @change="drawGraph()"><label for="check_b">B</label>
-      &nbsp;
-      <input type="checkbox" id="check_c" v-model="check_c" @change="drawGraph()"><label for="check_c">C</label>
-      &nbsp;
-      <input type="checkbox" id="check_d" v-model="check_d" @change="drawGraph()"><label for="check_d">D</label>
     </div>
     <div>
       <label>{{selected_label}}의 최소값: {{selected_min}} / 최대값: {{selected_max}}</label>
@@ -87,10 +77,6 @@ export default {
       check_y: true,
       check_z: true,
       check_theta: true,
-      check_a: false,
-      check_b: false,
-      check_c: false,
-      check_d: false,
       value_min: null,
       value_max: null,
       selected_min: null,
@@ -135,16 +121,76 @@ export default {
     drawGraph() {
       var vm = this;
 
+      if(vm.origin_data.length === 0) return
+
+      vm.chartOptions.series = {}
+
+      let color = ['blue', 'red', 'orange', 'green']
+      let dataStyle = {
+        lineWidth: 4
+      }
+
+      let limitStyle = {
+        lineDashStyle: [4, 4],
+        lineWidth: 1
+      }
+
       var converted_data = ['datetime']
       var checked_count = 0;
-      if(vm.check_x) { converted_data.push('X'); checked_count += 1; }
-      if(vm.check_y) { converted_data.push('Y'); checked_count += 1; }
-      if(vm.check_z) { converted_data.push('Z'); checked_count += 1; }
-      if(vm.check_theta) { converted_data.push('Theta');  checked_count += 1; }
-      if(vm.check_a) { converted_data.push('A'); checked_count += 1; }
-      if(vm.check_b) { converted_data.push('B'); checked_count += 1; }
-      if(vm.check_c) { converted_data.push('C'); checked_count += 1; }
-      if(vm.check_d) { converted_data.push('D'); checked_count += 1; }
+      if(vm.check_x) { 
+        converted_data.push('X'); 
+        checked_count += 1; 
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, dataStyle);
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[0]
+      }
+      if(vm.check_y) { 
+        converted_data.push('Y'); checked_count += 1; 
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, dataStyle);
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[1]
+      }
+      if(vm.check_z) { 
+        converted_data.push('Z'); checked_count += 1; 
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, dataStyle);
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[2]
+      }
+      if(vm.check_theta) { 
+        converted_data.push('θ');  checked_count += 1; 
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, dataStyle);
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[3]
+        }
+
+      if(vm.check_x) {
+        converted_data.push('X limit+');
+        converted_data.push('X limit-');
+        vm.chartOptions.series[converted_data.length-3] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-3]['color'] = color[0]
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[0]
+      }
+      if(vm.check_y) {
+        converted_data.push('Y limit+');
+        converted_data.push('Y limit-');
+        vm.chartOptions.series[converted_data.length-3] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-3]['color'] = color[1]
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[1]
+      }
+      if(vm.check_z) {
+        converted_data.push('Z limit+');
+        converted_data.push('Z limit-');
+        vm.chartOptions.series[converted_data.length-3] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-3]['color'] = color[2]
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[2]
+      }
+      if(vm.check_theta) {
+        converted_data.push('θ limit+');
+        converted_data.push('θ limit-');
+        vm.chartOptions.series[converted_data.length-3] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-2] = Object.assign({}, limitStyle)
+        vm.chartOptions.series[converted_data.length-3]['color'] = color[3]
+        vm.chartOptions.series[converted_data.length-2]['color'] = color[3]
+      }
 
       vm.value_min = Array(checked_count).fill(Number.MAX_VALUE);
       vm.value_max = Array(checked_count).fill(Number.MIN_VALUE);
@@ -158,10 +204,27 @@ export default {
         if(vm.check_y) { array_m.push(m.diff_y); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_y); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_y); i += 1;}
         if(vm.check_z) { array_m.push(m.diff_z); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_z); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_z); i += 1;}
         if(vm.check_theta) {array_m.push(m.diff_a); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_a); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_a); i += 1;}
-        if(vm.check_a) { array_m.push(m.measure_a); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_a); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_a); i += 1;}
-        if(vm.check_b) { array_m.push(m.measure_b); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_b); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_b); i += 1;}
-        if(vm.check_c) { array_m.push(m.measure_c); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_c); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_c); i += 1;}
-        if(vm.check_d) { array_m.push(m.measure_d); vm.value_min[i] = Math.min(vm.value_min[i], m.measure_d); vm.value_max[i] = Math.max(vm.value_max[i], m.measure_d); i += 1;}
+
+        if(vm.check_x) {
+          array_m.push(vm.selected_device.x_max)
+          array_m.push(vm.selected_device.x_min)
+        }
+
+        if(vm.check_y) {
+          array_m.push(vm.selected_device.y_max)
+          array_m.push(vm.selected_device.y_min)
+        }
+
+        if(vm.check_z) {
+          array_m.push(vm.selected_device.z_max)
+          array_m.push(vm.selected_device.z_min)
+        }
+
+        if(vm.check_theta) {
+          array_m.push(vm.selected_device.t_max)
+          array_m.push(vm.selected_device.t_min)
+        }
+
         converted_data.push(array_m);
       }
 
