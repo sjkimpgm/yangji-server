@@ -83,7 +83,7 @@ export default {
 
       let color = ['blue', 'red', 'orange', 'green']
       let dataStyle = {
-        lineWidth: 4
+        lineWidth: 2
       }
 
       let limitStyle = {
