@@ -1,189 +1,174 @@
 <template>
-  <div>
-    <form class="form" v-on:submit="sendPost">
-      <button type="submit" class="btn btn-primary">저장 및 계산</button>
-      <table>
-        <tr> <td> f_A0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.f_Aa"> &times; <input class="border rounded" type="number" step="0.0001" v-model="device.V_A0"> &#43; <input class="border rounded" type="number" step="0.0001" v-model="device.f_Ab"> = {{f_A0.toFixed(4)}} </td> </tr>
-        <tr> <td> f_B0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.f_Ba"> &times; <input class="border rounded" type="number" step="0.0001" v-model="device.V_B0"> &#43; <input class="border rounded" type="number" step="0.0001" v-model="device.f_Bb"> = {{f_B0.toFixed(4)}} </td> </tr>
-        <tr> <td> f_C0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.f_Ca"> &times; <input class="border rounded" type="number" step="0.0001" v-model="device.V_C0"> &#43; <input class="border rounded" type="number" step="0.0001" v-model="device.f_Cb"> = {{f_C0.toFixed(4)}} </td> </tr>
-        <tr> <td> f_D0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.f_Da"> &times; <input class="border rounded" type="number" step="0.0001" v-model="device.V_D0"> &#43; <input class="border rounded" type="number" step="0.0001" v-model="device.f_Db"> = {{f_D0.toFixed(4)}} </td> </tr>
-        <tr>&nbsp;</tr>
-        <tr> <td> L_A0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.L_Ak"> &#43; {{f_A0.toFixed(4)}} = {{L_A0.toFixed(4)}} </td> </tr>
-        <tr> <td> L_B0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.L_Bk"> &#43; {{f_B0.toFixed(4)}} = {{L_B0.toFixed(4)}} </td> </tr>
-        <tr> <td> L_C0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.L_Ck"> &#43; {{f_C0.toFixed(4)}} = {{L_C0.toFixed(4)}} </td> </tr>
-        <tr> <td> L_D0 = <input class="border rounded" type="number" step="0.0001" style="text-align: right;" v-model="device.L_Dk"> &#43; {{f_D0.toFixed(4)}} = {{L_D0.toFixed(4)}} </td> </tr>
-        <tr>&nbsp;</tr>
-        <tr> <td> G_bar = <input class="border rounded" type="number" step="0.0001" v-model="device.G_bar"> </td> </tr>
-        <tr> <td> Q_bar = <input class="border rounded" type="number" step="0.0001" v-model="device.Q_bar"> </td> </tr>
-        <tr> <td> F_bar = <input class="border rounded" type="number" step="0.0001" v-model="device.F_bar"> </td> </tr>
-        <tr>&nbsp;</tr>
-        <tr> <td> theta_x = <input class="border rounded" type="number" step="0.0001" v-model="device.theta_x"> </td> </tr>
-        <tr> <td> theta_y = <input class="border rounded" type="number" step="0.0001" v-model="device.theta_y"> </td> </tr>
-        <tr> <td> theta_z = <input class="border rounded" type="number" step="0.0001" v-model="device.theta_z"> </td> </tr>
-        <tr>&nbsp;</tr>
-        <tr> <td> D =  <input class="border rounded" type="number" step="0.0001" v-model="device.D"> </td> </tr>
-        <tr> <td> w1 = <input class="border rounded" type="number" step="0.0001" v-model="device.w1"> </td> </tr>
-        <tr> <td> w2 = <input class="border rounded" type="number" step="0.0001" v-model="device.w2"> </td> </tr>
-        <tr> <td> d =  <input class="border rounded" type="number" step="0.0001" v-model="device.dsmall"> </td> </tr>
-        <tr>&nbsp;</tr>
-      </table>
+  <v-container fluid>
+    <v-row>
+      <v-select
+        v-model="targetDevice"
+        label="계측기 선택"
+        :items="devices"
+        item-text="name"
+        return-object
+        />
+    </v-row>
 
-      <div class="row">
-        <h3>Matrix</h3>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.M00.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M01.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M02.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M03.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.M10.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M11.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M12.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M13.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.M20.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M21.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M22.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M23.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.M30.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M31.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M32.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.M33.toFixed(4)}}</div>
-      </div>
+    <v-row justify="space-around">
+      <v-btn color="primary" width="200" @click="updateDevice">저장</v-btn>
+    </v-row>
 
-      <div class="row">
-        <h3>Inverse matrix</h3>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.inv00.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv01.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv02.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv03.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.inv10.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv11.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv12.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv13.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.inv20.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv21.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv22.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv23.toFixed(4)}}</div>
-      </div>
-      <div class="row">
-        <div class="col-1 border">{{device.inv30.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv31.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv32.toFixed(4)}}</div>
-        <div class="col-1 border">{{device.inv33.toFixed(4)}}</div>
-      </div>
+    <div v-if="targetDevice">
+      <v-row>
+        <v-col cols="4">
+          <v-text-field label="이름" v-model="targetDevice.name" />
+        </v-col>
+        <v-col cols="4">
+          <v-text-field label="기기 ID" v-model="targetDevice.device_id" />
+        </v-col>
+        <v-col cols="4">
+          <v-text-field label="기기 타입" v-model="targetDevice.device_type" hint="후보: default, adv_v3" />
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <p class="text-right">경고 최대값</p>
+        </v-col>
+        <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`limit_max_${idx}`">
+          <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.limit_max[idx]" type="number" hide-details />
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <p class="text-right">경고 최소값</p>
+        </v-col>
+        <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`limit_min_${idx}`">
+          <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.limit_min[idx]" type="number" hide-details />
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <p class="text-right">유격 기본값</p>
+        </v-col>
+        <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`default_offset_${idx}`">
+          <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.default_offset[idx]" type="number" hide-details />
+        </v-col>
+      </v-row>
 
-    </form>
-  </div>
+      <v-row justify="center" class="mt-10">
+        <span class="red--text">아래 값들은 기기 측정 값에서 실제 유격을 계산하는데 사용되는 값입니다. 함부로 변경하지 말아주세요.</span>
+      </v-row>
+
+      <v-row justify="space-between">
+        <v-col cols="5">
+          <v-row>
+            <span>Inverted matrix</span>
+          </v-row>
+          <v-row v-for="i in [0, 1, 2, 3]" :key="`inv_${i}`">
+            <v-col v-for="j in [0, 1, 2, 3]" :key="`inv_${i}_${j}`" cols="3" class="py-0 px-1">
+              <v-text-field v-model.number="targetDevice.params.inv_matrix[i][j]" type="number" hide-details />
+            </v-col>
+          </v-row>
+        </v-col>
+        <v-col cols="5">
+          <v-row>
+            <span>Matrix</span>
+          </v-row>
+          <v-row v-for="i in [0, 1, 2, 3]" :key="`inv_${i}`">
+            <v-col v-for="j in [0, 1, 2, 3]" :key="`inv_${i}_${j}`" cols="3" class="py-0 px-1">
+              <v-text-field v-model.number="targetDevice.params.matrix[i][j]" type="number" hide-details />
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+
+      <div v-if="targetDevice.device_type === 'default'">
+        <v-row>
+          <v-col>
+            <p class="text-right">F_a</p>
+          </v-col>
+          <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`F_a_${idx}`">
+            <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.F_a[idx]" type="number" hide-details />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <p class="text-right">F_b</p>
+          </v-col>
+          <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`F_b_${idx}`">
+            <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.F_b[idx]" type="number" hide-details />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <p class="text-right">V_k</p>
+          </v-col>
+          <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`L_k_${idx}`">
+            <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.L_k[idx]" type="number" hide-details />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col>
+            <p class="text-right">V_0</p>
+          </v-col>
+          <v-col cols="2" v-for="idx in [0,1,2,3]" :key="`V_0_${idx}`">
+            <v-text-field :label="diffLabel[idx]" v-model.number="targetDevice.params.V_0[idx]" type="number" hide-details />
+          </v-col>
+        </v-row>
+
+      </div>
+    </div>
+  </v-container>
 </template>
 
 <script>
 import axios from 'axios'
 
+// FIXME(sjkim): For axios update. Please find better way
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+
 export default {
   data() {
     return {
-      device: {
-        'f_Aa': 0,
-        'f_Ba': 0,
-        'f_Ca': 0,
-        'f_Da': 0,
-        'f_Ab': 0,
-        'f_Bb': 0,
-        'f_Cb': 0,
-        'f_Db': 0,
-        'L_Ak': 0,
-        'L_Bk': 0,
-        'L_Ck': 0,
-        'L_Dk': 0,
-        'V_A0': 0,
-        'V_B0': 0,
-        'V_C0': 0,
-        'V_D0': 0,
-        'M00': 0,
-        'M01': 0,
-        'M02': 0,
-        'M03': 0,
-        'M10': 0,
-        'M11': 0,
-        'M12': 0,
-        'M13': 0,
-        'M20': 0,
-        'M21': 0,
-        'M22': 0,
-        'M23': 0,
-        'M30': 0,
-        'M31': 0,
-        'M32': 0,
-        'M33': 0,
-        'inv00': 0,
-        'inv01': 0,
-        'inv02': 0,
-        'inv03': 0,
-        'inv10': 0,
-        'inv11': 0,
-        'inv12': 0,
-        'inv13': 0,
-        'inv20': 0,
-        'inv21': 0,
-        'inv22': 0,
-        'inv23': 0,
-        'inv30': 0,
-        'inv31': 0,
-        'inv32': 0,
-        'inv33': 0,
-      },
+      devices: [],
+      targetDevice: null,
+      diffLabel: ['X', 'Y', 'Z', 'θ']
     }
   },
   methods: {
-    sendPost: function() {
-      var vm = this;
-
-      axios.post('/api/calc_device/', vm.device)
-      .then(function(res) {
-        console.log(res.data)
-        vm.updateDevice();
-      }, function() {
-      	console.log('failed')
-      })
-    },
     updateDevice: function() {
-      var vm = this;
+      if(!this.targetDevice) {
+        alert("먼저 계측기를 선택해주세요.")
+        return
+      }
 
       axios
-        .get('/api/device/')
-        .then(function(response) {
-          vm.device = response.data[0];
+        .patch(`/api/device/${this.targetDevice.id}/`, this.targetDevice)
+        .then(() => {
+          alert("변경 사항이 저장되었습니다.")
         });
     }
   },
-  computed: {
-    f_A0: function() { return this.device.f_Aa * this.device.V_A0  + this.device.f_Ab },
-    f_B0: function() { return this.device.f_Ba * this.device.V_B0  + this.device.f_Bb },
-    f_C0: function() { return this.device.f_Ca * this.device.V_C0  + this.device.f_Cb },
-    f_D0: function() { return this.device.f_Da * this.device.V_D0  + this.device.f_Db },
-    L_A0: function() { return this.device.L_Ak  + this.f_A0 },
-    L_B0: function() { return this.device.L_Bk  + this.f_B0 },
-    L_C0: function() { return this.device.L_Ck  + this.f_C0 },
-    L_D0: function() { return this.device.L_Dk  + this.f_D0 },
-  },
+
   mounted() {
-    this.updateDevice();
+    axios.get('/api/device')
+    .then((response) => {
+      this.devices = response.data.map((device) => {
+        if(!device.params.limit_max) {
+          device.params.limit_max = [10, 10, 10, 10]
+        }
+
+        if(!device.params.limit_min) {
+          device.params.limit_min = [-10, -10, -10, -10]
+        }
+
+        if(!device.params.default_offset) {
+          device.params.default_offset = [0, 0, 0, 0]
+        }
+
+        return device
+      })
+    })
   }
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-</style>

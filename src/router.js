@@ -10,7 +10,6 @@ import MeasurementGraph from '@/components/MeasurementGraph'
 import MeasurementGraphRealtime from '@/components/MeasurementGraphRealtime'
 import Measurement3D from '@/components/Measurement3D'
 import DeviceSetup from '@/components/DeviceSetup'
-import ChangeMeasurement from '@/components/ChangeMeasurement'
 
 Vue.use(Router)
 
@@ -60,11 +59,6 @@ export default new Router({
       path: '/device_setup',
       name: 'device_setup',
       component: DeviceSetup
-    },
-    {
-      path: '/change_measurement',
-      name: 'change_measurement',
-      component: ChangeMeasurement
     },
   ]
 })
