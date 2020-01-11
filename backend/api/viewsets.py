@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from .models import *
 from .serializers import *
+from .utils.general_pagination import GeneralPageNumberPagination
 
 __all__ = [
     'MeasurementViewSet',
@@ -16,6 +17,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['datetime']
     ordering = ['datetime']
+    pagination_class = GeneralPageNumberPagination
 
     def get_queryset(self):
         queryset = Measurement.objects.all()

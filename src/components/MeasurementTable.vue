@@ -1,36 +1,72 @@
 <template>
   <div>
-      <span>계측기 선택: </span>
-      <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices">
-          {{ option.name }}
-        </option>
-      </select>
+    <v-row justify="space-around">
+      <v-col cols="4">
+        <v-select label="계측기 선택" :items="devices" item-text="name" item-value="device_id" v-model="selected_device" />
+      </v-col>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
+      <v-col cols="4">
+        <v-select label="날짜 선택" :items="dates" v-model="selected_date" />
+      </v-col>
+    </v-row>
 
-    <span>날짜 선택: </span>
-    <select v-model="selected_date" @change="onChangeDate($event)">
-      <option v-for="option in dates">
-        {{ option }}
-      </option>
-    </select>
-
-    <el-table height="600" :data="tableData">
-
-      <el-table-column prop="datetime" label="DateTime" width="200" sortable />
-      <el-table-column prop="diff_x" label="X" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_y" label="Y" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_z" label="Z" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_a" label="theta" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="measure_a" label="A" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_b" label="B" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_c" label="C" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_d" label="D" width="90" :formatter="measurement_formatter" />
-
-    </el-table>
+    <v-data-table
+      :headers="headers"
+      :items="tableData"
+      :items-per-page="100"
+      :loading="isLoading"
+      :options.sync="options"
+      :server-items-length="items_total_count"
+      :footer-props="{
+        'items-per-page-options': [50, 100, 200],
+        'showFirstLastPage': true,
+      }"
+      height="600"
+      class="elevation-1"
+      fixed-header
+    >
+      <template v-slot:footer.page-text="{pageStart, pageStop, itemsLength}">
+        <v-row>
+          <v-col align-self="center">
+            <span>{{ pageStart }}-{{ pageStop }} of {{ itemsLength }}</span>
+          </v-col>
+          <v-col align-self="center">
+            <v-text-field
+              v-model.number="options.page"
+              type="number"
+              hide-details
+              single-line
+              dense
+              class="my-0 py-0 caption"
+            />
+          </v-col>
+        </v-row>
+      </template> 
+      <template v-slot:item.diff_x="{ item }">
+        {{item.diff_x.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_y="{ item }">
+        {{item.diff_y.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_z="{ item }">
+        {{item.diff_z.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_a="{ item }">
+        {{item.diff_a.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_a="{ item }">
+        {{item.measure_a.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_b="{ item }">
+        {{item.measure_b.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_c="{ item }">
+        {{item.measure_c.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_d="{ item }">
+        {{item.measure_d.toFixed(2)}}
+      </template>
+    </v-data-table>
   </div>
 </template>
 
@@ -41,56 +77,128 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      device: '--',
       selected_device: null,
-      devices: ['--'],
-      selected_date: '--',
-      dates: ['--'],
-      tableData: null    
-      }
+      devices: [],
+      selected_date: null,
+      dates: [],
+      tableData: [],
+      isLoading: false,
+      options: {},
+      items_total_count: null,
+      headers: [
+        {
+          text: '시간',
+          align: 'center',
+          value: 'datetime',
+          sortable: false,
+        },
+        {
+          text: 'X',
+          align: 'center',
+          value: 'diff_x',
+          sortable: false,
+        },
+        {
+          text: 'Y',
+          align: 'center',
+          value: 'diff_y',
+          sortable: false,
+        },
+        {
+          text: 'Z',
+          align: 'center',
+          value: 'diff_z',
+          sortable: false,
+        },
+        {
+          text: 'θ',
+          align: 'center',
+          value: 'diff_a',
+          sortable: false,
+        },
+        {
+          text: 'A',
+          align: 'center',
+          value: 'measure_a',
+          sortable: false,
+        },
+        {
+          text: 'B',
+          align: 'center',
+          value: 'measure_b',
+          sortable: false,
+        },
+        {
+          text: 'C',
+          align: 'center',
+          value: 'measure_c',
+          sortable: false,
+        },
+        {
+          text: 'D',
+          align: 'center',
+          value: 'measure_d',
+          sortable: false,
+        },
+      ],
+    }
+  },
+  mounted() {
+    axios
+      .get('/api/device/')
+      .then((response) => {
+        this.devices = response.data
+      })
+  },
+
+  watch: {
+    selected_device: function() {
+      this.selected_date = null
+      this.dates = []
+
+      axios
+        .get(`/api/measurement_dates/?device_id=${this.selected_device}`)
+        .then((response) => {
+          this.dates = response.data
+        })
+    },
+
+    selected_date: function() {
+      if(!this.selected_date) return
+
+      this.fetchData()
+    },
+
+    options: {
+      handler () {
+        if(!this.selected_device || !this.selected_date) return
+
+        this.fetchData()
+      },
+      deep: true
+    }
   },
   methods: {
     measurement_formatter(row, column, value) {
       return value.toFixed(1);
     },
-    onChangeDate(event) {
-      var vm = this;
-      vm.tableData = null;
+
+    fetchData() {
+      this.tableData = []
+      this.isLoading = true
 
       axios
-        .get('/api/measurement/?device_id=' + vm.selected_device.device_id + '&target_date=' + vm.selected_date)
-        .then(function(response) {
-          vm.tableData = response.data;
-        });
-    },
-
-    onChangeDevice() {
-      var vm = this;
-      vm.dates = ['--'];
-      vm.selected_date = '--';
-
-      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
-
-      axios
-        .get('/api/measurement_dates/?device_id=' + vm.selected_device.device_id)
-        .then(function(response) {
-          vm.dates = ['--'].concat(response.data);
-        });
-    },
+        .get('/api/measurement/', { params: {
+          device_id: this.selected_device, 
+          target_date: this.selected_date,
+          page: this.options.page,
+          page_size: this.options.itemsPerPage
+        }}).then((response) => {
+          this.items_total_count = response.data.count
+          this.tableData = response.data.results
+          this.isLoading = false
+        })
+    }
   },
-
-  mounted() {
-    var vm = this;
-
-    axios
-      .get('/api/device/')
-      .then(function(response) {
-        vm.devices = [{'name': '--'}].concat(response.data);
-      });
-  }
-};
+}
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-</style>
