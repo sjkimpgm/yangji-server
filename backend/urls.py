@@ -9,10 +9,11 @@ from django.urls import path, include
 from rest_framework import routers
 
 from .api import views
-from .api.views import index_view, MeasurementViewSet, DeviceViewSet
+from .api.views import index_view
+from .api.viewsets import *
 
 router = routers.DefaultRouter()
-router.register('measurement', MeasurementViewSet, base_name="measurement")
+router.register('measurement', MeasurementViewSet, basename="measurement")
 router.register('device', DeviceViewSet)
 
 urlpatterns = [

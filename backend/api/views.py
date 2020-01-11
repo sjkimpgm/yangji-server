@@ -5,51 +5,20 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from rest_framework import viewsets, status, filters
 from rest_framework.renderers import JSONRenderer
 
-from .models import Measurement, MeasurementSerializer, Device, DeviceSerializer
+from .models import Measurement, Device
+from .serializers import *
 
 from django.db.models.functions import TruncDate
 from django.db.models import Min, Max, F
 
 import datetime
+import random
+import json
+import numpy as np
 
 # Serve Vue Application
 index_view = never_cache(TemplateView.as_view(template_name='index.html'))
 
-
-class MeasurementViewSet(viewsets.ModelViewSet):
-    serializer_class = MeasurementSerializer
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['datetime']
-    ordering = ['datetime']
-
-    def get_queryset(self):
-        queryset = Measurement.objects.all()
-        device_id = self.request.query_params.get('device_id', None)
-        target_date = self.request.query_params.get('target_date', None)
-        start_date = self.request.query_params.get('start_date', None)
-        end_date = self.request.query_params.get('end_date', None)
-
-        if device_id is not None:
-            queryset = queryset.filter(device_id=device_id)
-
-        if target_date is not None:
-            year, month, day = target_date.split('-')
-            queryset = queryset.filter(datetime__date=datetime.date(int(year), int(month), int(day)))
-        elif start_date is not None and end_date is not None:
-            year, month, day = start_date.split('-')
-            start = datetime.date(int(year), int(month), int(day))
-
-            year, month, day = end_date.split('-')
-            end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
-
-            queryset = queryset.filter(datetime__range=(start, end))
-
-            stride = int(len(queryset) / 1000)
-            if stride < 1:
-                stride = 1
-
-            # queryset = queryset[::stride]
-        return queryset
 
 def measurement_fill_diff(request):
     measurements = Measurement.objects.filter(diff_a__isnull=True)
@@ -71,6 +40,7 @@ def measurement_dates(request):
     distinct_dates = {d['datetime'].date() for d in dates}
     distinct_dates = sorted(list(distinct_dates))
     return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
+
 
 def measurement_recent(request):
     device_id = request.GET.get('device_id', None)
@@ -128,13 +98,6 @@ def measurement_aggr(request):
     return JsonResponse(result, safe=False, status=status.HTTP_200_OK)
 
 
-class DeviceViewSet(viewsets.ModelViewSet):
-    queryset = Device.objects.all()
-    serializer_class = DeviceSerializer
-
-
-import datetime
-import random
 def generate_data(request):
     Measurement.objects.all().delete()
 
@@ -145,8 +108,6 @@ def generate_data(request):
                 m = Measurement(datetime=date, measure_a=random.random(), measure_b=random.random(), measure_c=random.random(), measure_d=random.random())
                 m.save()
 
-import json
-import numpy as np
 
 @csrf_exempt
 def calc_device(request):

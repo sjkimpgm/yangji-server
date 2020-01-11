@@ -1,7 +1,9 @@
-from django.db import models
-from rest_framework import serializers
+import numpy as np
 import math
+import datetime
 
+from django.contrib.postgres.fields import JSONField
+from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 
@@ -31,54 +33,32 @@ class Measurement(models.Model):
     def diff_default(self, device):
         V = [self.measure_a, self.measure_b, self.measure_c, self.measure_d]
 
-        F_a = [device.f_Aa, device.f_Ba, device.f_Ca, device.f_Da]
-        F_b = [device.f_Ab, device.f_Bb, device.f_Cb, device.f_Db]
+        F_a = device.params['F_a']
+        F_b = device.params['F_b']
+        L_k = device.params['L_k']
+        V_0 = device.params['V_0']
 
-        F = [F_a[i] * V[i] + F_b[i] for i in range(4)]
+        F = np.multiply(F_a, V) + F_b
+        L = F + L_k
 
-        Lk = [device.L_Ak, device.L_Bk, device.L_Ck, device.L_Dk]
-        L = [F[i] + Lk[i] for i in range(4)]
+        F_0 = np.multiply(F_a, V_0) + F_b
+        L_0 = F_0 + L_k
 
-        V_0 = [device.V_A0, device.V_B0, device.V_C0, device.V_D0]
+        delta = L - L_0
 
-        F_0 = [F_a[i] * V_0[i] + F_b[i] for i in range(4)]
-        L_0 = [F_0[i] + Lk[i] for i in range(4)]
+        x, y, z, a = np.matmul(device.params['inv_matrix'], delta)
+        a = a * 180 / math.pi  # convert rad to deg
 
-        delta = [L[i] - L_0[i] for i in range(4)]
-
-        inv_A = [device.inv00, device.inv01, device.inv02, device.inv03]
-        inv_B = [device.inv10, device.inv11, device.inv12, device.inv13]
-        inv_C = [device.inv20, device.inv21, device.inv22, device.inv23]
-        inv_D = [device.inv30, device.inv31, device.inv32, device.inv33]
-
-        x = [delta[i] * inv_A[i] for i in range(4)]
-        y = [delta[i] * inv_B[i] for i in range(4)]
-        z = [delta[i] * inv_C[i] for i in range(4)]
-        a = [delta[i] * inv_D[i] for i in range(4)]
-
-        return (sum(x), sum(y), sum(z), sum(a) * 180 / math.pi)
+        return (x, y, z, a)
 
     def diff_adv_v3(self, device):
         delta = [self.measure_a, self.measure_b, self.measure_c, self.measure_d]
 
-        inv_A = [device.inv00, device.inv01, device.inv02, device.inv03]
-        inv_B = [device.inv10, device.inv11, device.inv12, device.inv13]
-        inv_C = [device.inv20, device.inv21, device.inv22, device.inv23]
-        inv_D = [device.inv30, device.inv31, device.inv32, device.inv33]
-
-        x = [delta[i] * inv_A[i] for i in range(4)]
-        y = [delta[i] * inv_B[i] for i in range(4)]
-        z = [delta[i] * inv_C[i] for i in range(4)]
-        a = [delta[i] * inv_D[i] for i in range(4)]
-
-        # FIXME(sjkim): just workaround for demo
-        x = sum(x)
-        y = sum(y)
-        z = sum(z)
-        a = sum(a) * 180 / math.pi
+        x, y, z, a = np.matmul(device.params['inv_matrix'], delta)
+        a = a * 180 / math.pi  # convert rad to deg
 
         return (x, y, z, a)
-        
+
     def __str__(self):
         x = self.diff_x if self.diff_x else 0
         y = self.diff_y if self.diff_y else 0
@@ -86,6 +66,7 @@ class Measurement(models.Model):
         a = self.diff_a if self.diff_a else 0
 
         return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f} / {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d, x, y, z, a)
+
 
 @receiver(pre_save, sender=Measurement)
 def measurement_pre_save_callback(sender, **kwargs):
@@ -96,18 +77,13 @@ def measurement_pre_save_callback(sender, **kwargs):
     data.diff_z = z
     data.diff_a = a
 
-class MeasurementSerializer(serializers.ModelSerializer):
-    datetime = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-
-    class Meta:
-        model = Measurement
-        fields = ('device_id', 'datetime', 'measure_a', 'measure_b', 'measure_c', 'measure_d', 'diff_x', 'diff_y', 'diff_z', 'diff_a')
-
 
 class Device(models.Model):
-    name = models.CharField(max_length=20) # same as device_id
+    name = models.CharField(max_length=20)  # same as device_id
     device_id = models.CharField(max_length=17)
     device_type = models.CharField(max_length=17, default="default")
+
+    params = JSONField(default=dict)
 
     V_A0 = models.FloatField(default=0.0)
     V_B0 = models.FloatField(default=0.0)
@@ -188,7 +164,5 @@ class Device(models.Model):
     z_max = models.FloatField(default=10.0)
     t_max = models.FloatField(default=10.0)
 
-class DeviceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Device
-        fields = ('name', 'device_id', 'x_min', 'y_min', 'z_min', 't_min', 'x_max', 'y_max', 'z_max', 't_max')
+    def __str__(self):
+        return f"{self.name} ({self.device_id}) - {self.device_type}"
