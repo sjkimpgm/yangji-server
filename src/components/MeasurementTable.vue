@@ -155,6 +155,7 @@ export default {
     selected_device: function() {
       this.selected_date = null
       this.dates = []
+      this.tableData = []
 
       axios
         .get(`/api/measurement_dates/?device_id=${this.selected_device}`)
@@ -179,10 +180,6 @@ export default {
     }
   },
   methods: {
-    measurement_formatter(row, column, value) {
-      return value.toFixed(1);
-    },
-
     fetchData() {
       this.tableData = []
       this.isLoading = true

@@ -1,53 +1,45 @@
 <template>
   <div>
-    <div>
-      <span>계측기 선택: </span>
-      <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices">
-          {{ option.name }}
-        </option>
-      </select>
+    <v-row justify="space-around">
+      <v-col cols="4">
+        <v-select label="계측기 선택" :items="devices" item-text="name" item-value="device_id" v-model="selected_device" />
+      </v-col>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
+      <v-col cols="4">
+        <v-select label="시작 날짜 선택" :items="dates" v-model="start_date" />
+      </v-col>
 
-      <span>시작 날짜 선택: </span>
-      <select v-model="start_date" @change="onChangeStartDate()">
-        <option v-for="option in dates">
-          {{ option }}
-        </option>
-      </select>
+      <v-col cols="4">
+        <v-select label="종료 날짜 선택" :items="dates2" v-model="end_date" />
+      </v-col>
+    </v-row>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
-
-      <span>종료 날짜 선택: </span>
-      <select v-model="end_date" @change="onChangeEndDate()">
-        <option v-for="option in dates2">
-          {{ option }}
-        </option>
-      </select>
-    </div>
-
-    <el-table height="600" :data="tableData">
-
-      <el-table-column prop="date" label="DateTime" width="200" sortable />
-      <el-table-column prop="min_x" label="min(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="max_x" label="max(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_x" label="diff(X)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="min_y" label="min(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="max_y" label="max(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_y" label="diff(Y)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="min_z" label="min(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="max_z" label="max(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_z" label="diff(Z)" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="min_a" label="min(θ)" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="max_a" label="max(θ)" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="diff_a" label="diff(θ)" width="90" :formatter="measurement_formatter" /> 
-
-    </el-table>
+    <v-data-table
+      :headers="headers"
+      :items="tableData"
+      :items-per-page="20"
+      :loading="isLoading"
+      :footer-props="{
+        'items-per-page-options': [10, 20, 50],
+        'showFirstLastPage': true,
+      }"
+      height="600"
+      class="elevation-1"
+      fixed-header
+    >
+      <template v-slot:item.min_x="{ item }">{{item.min_x.toFixed(2)}}</template>
+      <template v-slot:item.min_y="{ item }">{{item.min_y.toFixed(2)}}</template>
+      <template v-slot:item.min_z="{ item }">{{item.min_z.toFixed(2)}}</template>
+      <template v-slot:item.min_a="{ item }">{{item.min_a.toFixed(2)}}</template>
+      <template v-slot:item.max_x="{ item }">{{item.max_x.toFixed(2)}}</template>
+      <template v-slot:item.max_y="{ item }">{{item.max_y.toFixed(2)}}</template>
+      <template v-slot:item.max_z="{ item }">{{item.max_z.toFixed(2)}}</template>
+      <template v-slot:item.max_a="{ item }">{{item.max_a.toFixed(2)}}</template>
+      <template v-slot:item.diff_x="{ item }">{{item.diff_x.toFixed(2)}}</template>
+      <template v-slot:item.diff_y="{ item }">{{item.diff_y.toFixed(2)}}</template>
+      <template v-slot:item.diff_z="{ item }">{{item.diff_z.toFixed(2)}}</template>
+      <template v-slot:item.diff_a="{ item }">{{item.diff_a.toFixed(2)}}</template>
+    </v-data-table>
   </div>
 </template>
 
@@ -58,17 +50,128 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      device: '--',
       selected_device: null,
-      devices: ['--'],
-      start_date: '--',
-      end_date: '--',
-      dates: ['--'],
-      dates2: ['--'],
-      tableData: null    
+      devices: [],
+      start_date: null,
+      end_date: null,
+      dates: [],
+      dates2: [],
+      tableData: [],
+      isLoading: false,
+      headers: [
+        {
+          text: '날짜',
+          align: 'center',
+          value: 'date',
+          width: 150
+        },
+        {
+          text: 'min(X)',
+          align: 'center',
+          value: 'min_x',
+        },
+        {
+          text: 'max(X)',
+          align: 'center',
+          value: 'max_x',
+        },
+        {
+          text: 'diff(X)',
+          align: 'center',
+          value: 'diff_x',
+        },
+        {
+          text: 'min(y)',
+          align: 'center',
+          value: 'min_y',
+        },
+        {
+          text: 'max(y)',
+          align: 'center',
+          value: 'max_y',
+        },
+        {
+          text: 'diff(y)',
+          align: 'center',
+          value: 'diff_y',
+        },
+        {
+          text: 'min(Z)',
+          align: 'center',
+          value: 'min_z',
+        },
+        {
+          text: 'max(Z)',
+          align: 'center',
+          value: 'max_z',
+        },
+        {
+          text: 'diff(Z)',
+          align: 'center',
+          value: 'diff_z',
+        },
+        {
+          text: 'min(θ)',
+          align: 'center',
+          value: 'min_a',
+        },
+        {
+          text: 'max(θ)',
+          align: 'center',
+          value: 'max_a',
+        },
+        {
+          text: 'diff(θ)',
+          align: 'center',
+          value: 'diff_a',
+        },
+      ],
       }
   },
+
+  watch: {
+    selected_device: function() {
+      this.start_date = null
+      this.end_date = null
+      this.dates = []
+      this.dates2 = []
+      this.tableData = []
+
+      axios
+        .get(`/api/measurement_dates/?device_id=${this.selected_device}`)
+        .then((response) => {
+          this.dates = response.data
+        })
+    },
+
+    start_date: function() {
+      this.end_date = null
+      this.dates2 = this.dates.filter((date) => date >= this.start_date)
+    },
+
+    end_date: function() {
+      if(!this.end_date) return
+
+      this.fetchData()
+    }
+  },
+
   methods: {
+    fetchData() {
+      this.tableData = []
+      this.isLoading = true
+
+      axios
+        .get('/api/measurement_aggr/', { params: {
+          device_id: this.selected_device, 
+          start_date: this.start_date,
+          end_date: this.end_date,
+        }}).then((response) => {
+          this.tableData = response.data
+          this.isLoading = false
+        })
+    },
+
     measurement_formatter(row, column, value) {
       return value.toFixed(1);
     },
@@ -115,13 +218,11 @@ export default {
   },
 
   mounted() {
-    var vm = this;
-
     axios
       .get('/api/device/')
-      .then(function(response) {
-        vm.devices = [{'name': '--'}].concat(response.data);
-      });
+      .then((response) => {
+        this.devices = response.data
+      })
   }
 };
 </script>
