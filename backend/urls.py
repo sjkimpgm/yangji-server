@@ -14,6 +14,7 @@ from .api.viewsets import *
 
 router = routers.DefaultRouter()
 router.register('measurement', MeasurementViewSet, basename="measurement")
+router.register('measurement_graph', MeasurementForGraphViewSet, basename="measurement_graph")
 router.register('device', DeviceViewSet)
 
 urlpatterns = [

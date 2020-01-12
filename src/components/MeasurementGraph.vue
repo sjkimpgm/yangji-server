@@ -1,35 +1,31 @@
 <template>
   <div>
-    <div>
-      <span>계측기 선택: </span>
-      <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices" :key="option.name">
-          {{ option.name }}
-        </option>
-      </select>
+    <v-row justify="space-around">
+      <v-col cols="3">
+        <v-select label="계측기 선택" :items="devices" item-text="name" return-object v-model="selected_device" />
+      </v-col>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
+      <v-col cols="3">
+        <v-select label="시작 날짜 선택" :items="dates" v-model="start_date" />
+      </v-col>
 
-      <span>시작 날짜 선택: </span>
-      <select v-model="start_date" @change="onChangeStartDate()">
-        <option v-for="option in dates" :key="option">
-          {{ option }}
-        </option>
-      </select>
+      <v-col cols="3">
+        <v-select label="종료 날짜 선택" :items="dates2" v-model="end_date" />
+      </v-col>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
+      <v-col>
+        <v-btn color="primary" @click="fetchAndDraw">그래프 그리기</v-btn>
+      </v-col>
+    </v-row>
 
-      <span>종료 날짜 선택: </span>
-      <select v-model="end_date" @change="onChangeEndDate()">
-        <option v-for="option in dates2" :key="option">
-          {{ option }}
-        </option>
-      </select>
-    </div>
+    <v-row v-if="isLoading" justify="center">
+      <v-col cols="2">
+        <p>데이터 로딩: </p>
+      </v-col>
+      <v-col cols="4">
+        <v-progress-linear :value="progress"></v-progress-linear>
+      </v-col>
+    </v-row>
 
     <div>
       <input type="checkbox" id="check_x" v-model="check_x" @change="drawGraph()"><label for="check_x">X</label>
@@ -65,13 +61,14 @@ export default {
   data() {
     var vm = this;
     return {
-      device: '--',
       selected_device: null,
-      devices: ['--'],
-      start_date: '--',
-      end_date: '--',
-      dates: ['--'],
-      dates2: ['--'],
+      devices: [],
+      start_date: null,
+      end_date: null,
+      dates: [],
+      dates2: [],
+      isLoading: false,
+      progress: 0,
       chartData: null,
       check_x: true,
       check_y: true,
@@ -87,7 +84,7 @@ export default {
         height: 600,
         curveType: 'function',
         vAxis: { 
-          title: '측정값',
+          title: '측정값 (단위: mm)',
           maxValue: 4,
           minValue: 0,
         },
@@ -113,9 +110,69 @@ export default {
       }
     }
   },
+
+  watch: {
+    selected_device: function() {
+      this.start_date = null
+      this.end_date = null
+      this.dates = []
+      this.dates2 = []
+      this.chartData = null
+
+      axios
+        .get(`/api/measurement_dates/?device_id=${this.selected_device.device_id}`)
+        .then((response) => {
+          this.dates = response.data
+        })
+    },
+
+    start_date: function() {
+      this.end_date = null
+      this.dates2 = this.dates.filter((date) => date >= this.start_date)
+    },
+  },
+
   methods: {
-    measurement_formatter(row, column, value) {
-      return value.toFixed(1);
+    fetchAndDraw() {
+      if(!this.selected_device) {
+        alert('계측기를 먼저 선택해주세요.')
+        return
+      }
+      if(!this.start_date || !this.end_date) {
+        alert('날짜를 먼저 선택해주세요.')
+        return
+      }
+
+      this.fetchData()
+    },
+
+    async fetchData() {
+      this.origin_data = []
+      this.isLoading = true
+
+      let response = await axios
+        .get('/api/measurement_graph/', { params: {
+          device_id: this.selected_device.device_id, 
+          start_date: this.start_date,
+          end_date: this.end_date,
+          page_size: 200,
+        }})
+
+      const total_count = response.data.count
+      while(response.data.next) {
+        this.origin_data = this.origin_data.concat(response.data.results)
+        this.progress = this.origin_data.length / total_count * 100
+
+        let nextLink = new URL(response.data.next)
+        nextLink = nextLink.pathname + nextLink.search
+
+        response = await axios.get(nextLink)
+      }
+
+      this.origin_data = this.origin_data.concat(response.data.results)
+      this.progress = this.origin_data.length / total_count * 100
+      this.isLoading = false
+      this.drawGraph()
     },
 
     drawGraph() {
@@ -206,23 +263,23 @@ export default {
         if(vm.check_theta) {array_m.push(m.diff_a); vm.value_min[i] = Math.min(vm.value_min[i], m.diff_a); vm.value_max[i] = Math.max(vm.value_max[i], m.diff_a); i += 1;}
 
         if(vm.check_x) {
-          array_m.push(vm.selected_device.x_max)
-          array_m.push(vm.selected_device.x_min)
+          array_m.push(vm.selected_device.params.limit_max[0])
+          array_m.push(vm.selected_device.params.limit_min[0])
         }
 
         if(vm.check_y) {
-          array_m.push(vm.selected_device.y_max)
-          array_m.push(vm.selected_device.y_min)
+          array_m.push(vm.selected_device.params.limit_max[1])
+          array_m.push(vm.selected_device.params.limit_min[1])
         }
 
         if(vm.check_z) {
-          array_m.push(vm.selected_device.z_max)
-          array_m.push(vm.selected_device.z_min)
+          array_m.push(vm.selected_device.params.limit_max[2])
+          array_m.push(vm.selected_device.params.limit_min[2])
         }
 
         if(vm.check_theta) {
-          array_m.push(vm.selected_device.t_max)
-          array_m.push(vm.selected_device.t_min)
+          array_m.push(vm.selected_device.params.limit_max[3])
+          array_m.push(vm.selected_device.params.limit_min[3])
         }
 
         converted_data.push(array_m);
@@ -230,62 +287,14 @@ export default {
 
       vm.chartData = converted_data;
     },
-
-    onChangeDevice() {
-      var vm = this;
-      vm.dates = ['--'];
-      vm.start_date = '--';
-      vm.dates2 = ['--'];
-      vm.end_date = '--';
-
-      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
-
-      axios
-        .get('/api/measurement_dates/?device_id=' + vm.selected_device.device_id)
-        .then(function(response) {
-          vm.dates = ['--'].concat(response.data);
-        });
-
-      vm.dates.forEach(element => {
-        if(element >= vm.start_date) {
-          vm.dates2.push(element);
-        }
-      });
-    },
-
-    onChangeStartDate() {
-      var vm = this;
-      vm.dates2 = ['--'];
-      vm.end_date = '--';
-
-      vm.dates.forEach(element => {
-        if(element >= vm.start_date) {
-          vm.dates2.push(element);
-        }
-      });
-    },
-  
-    onChangeEndDate() {
-      var vm = this;
-      vm.origin_data = []
-
-      axios
-        .get('/api/measurement/?device_id=' + vm.selected_device.device_id + '&start_date=' + vm.start_date + '&end_date=' + vm.end_date)
-        .then(function(response) {
-          vm.origin_data = response.data
-          vm.drawGraph()
-        });
-    }
   },
 
   mounted() {
-    var vm = this;
-
     axios
       .get('/api/device/')
-      .then(function(response) {
-        vm.devices = [{'name': '--'}].concat(response.data);
-      });
+      .then((response) => {
+        this.devices = response.data
+      })
   }
 };
 </script>

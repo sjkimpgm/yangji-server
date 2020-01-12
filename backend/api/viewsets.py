@@ -1,3 +1,5 @@
+from django.db.models import F
+
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,6 +10,7 @@ from .utils.general_pagination import GeneralPageNumberPagination
 
 __all__ = [
     'MeasurementViewSet',
+    'MeasurementForGraphViewSet',
     'DeviceViewSet',
 ]
 
@@ -46,6 +49,37 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 stride = 1
 
             # queryset = queryset[::stride]
+        return queryset
+
+
+class MeasurementForGraphViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = MeasurementSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['datetime']
+    ordering = ['datetime']
+    pagination_class = GeneralPageNumberPagination
+
+    def get_queryset(self):
+        queryset = Measurement.objects.all()
+        device_id = self.request.query_params.get('device_id', None)
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+
+        if device_id is not None:
+            queryset = queryset.filter(device_id=device_id)
+
+        # Decrease total result count into 1/10 for fast processing
+        queryset = queryset.filter(datetime__minute__in=[0, 10, 20, 30, 40, 50])
+
+        if start_date is not None and end_date is not None:
+            year, month, day = start_date.split('-')
+            start = datetime.date(int(year), int(month), int(day))
+
+            year, month, day = end_date.split('-')
+            end = datetime.date(int(year), int(month), int(day)) + datetime.timedelta(days=1)
+
+            queryset = queryset.filter(datetime__range=(start, end))
+
         return queryset
 
 
