@@ -62,6 +62,7 @@ class MeasurementForGraphViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = Measurement.objects.all()
         device_id = self.request.query_params.get('device_id', None)
+        target_date = self.request.query_params.get('target_date', None)
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
 
@@ -71,7 +72,10 @@ class MeasurementForGraphViewSet(viewsets.ReadOnlyModelViewSet):
         # Decrease total result count into 1/10 for fast processing
         queryset = queryset.filter(datetime__minute__in=[0, 10, 20, 30, 40, 50])
 
-        if start_date is not None and end_date is not None:
+        if target_date is not None:
+            year, month, day = target_date.split('-')
+            queryset = queryset.filter(datetime__date=datetime.date(int(year), int(month), int(day)))
+        elif start_date is not None and end_date is not None:
             year, month, day = start_date.split('-')
             start = datetime.date(int(year), int(month), int(day))
 

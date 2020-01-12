@@ -1,34 +1,63 @@
 <template>
   <div>
-    <div>
-      <span>계측기 선택: </span>
-      <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices">
-          {{ option.name }}
-        </option>
-      </select>
+    <v-row justify="space-around">
+      <v-col cols="3">
+        <v-select label="계측기 선택" :items="devices" item-text="name" return-object v-model="selected_device" />
+      </v-col>
 
-      &nbsp;
-      &nbsp;
-      &nbsp;
+      <v-col cols="3">
+        <v-select label="시작 날짜 선택" :items="dates" v-model="start_date" />
+      </v-col>
 
-      <span>날짜 선택: </span>
-      <select v-model="selected" @change="onChange()">
-        <option v-for="option in dates">
-          {{ option }}
-        </option>
-      </select>
-    </div>
-    <div>
-      <button class="btn btn-secondary" v-on:click="start()">Play</button>
-      &nbsp;
-      <button class="btn btn-secondary" v-on:click="stop()">Stop</button>
-      &nbsp;
-      <input type="range" v-model.number="idx" min="0" max="100" step="0.1" @change="sliderChange()">
-    </div>
-    <div>
-      <span>{{ current_time }}</span>
-    </div>
+      <v-col cols="3">
+        <v-select label="종료 날짜 선택" :items="dates2" v-model="end_date" />
+      </v-col>
+
+      <v-col>
+        <v-btn color="primary" @click="fetchAndDraw">데이터 로딩</v-btn>
+      </v-col>
+    </v-row>
+
+    <v-row justify="start">
+      <v-col cols="1">
+        <v-btn color="primary" @click="start()" :disabled="isLoading || Boolean(timer)">Play</v-btn>
+      </v-col>
+      <v-col cols="1">
+        <v-btn color="primary" @click="stop()" :disabled="isLoading || !timer">Stop</v-btn>
+      </v-col>
+      <v-col cols="2">
+        <v-slider v-model.number="idx" min="0" :max="this.data.length" step="1" @change="sliderChange" />
+      </v-col>
+      <v-col cols="2">
+        <v-checkbox v-model="leftFixed" label="고정단" class="ma-0" />
+      </v-col>
+
+      <v-col cols="2" class="pa-1">
+        <v-text-field label="시간" v-model="current_time" read-only hide-details />
+      </v-col>
+
+      <v-col cols="1" class="pa-1">
+        <v-text-field label="X" v-model="x" read-only hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1">
+        <v-text-field label="Y" v-model="y" read-only hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1">
+        <v-text-field label="Z" v-model="z" read-only hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1">
+        <v-text-field label="θ" v-model="a" read-only hide-details />
+      </v-col>
+    </v-row>
+
+    <v-row v-if="isLoading" justify="center">
+      <v-col cols="2">
+        <p>데이터 로딩: </p>
+      </v-col>
+      <v-col cols="4">
+        <v-progress-linear :value="progress"></v-progress-linear>
+      </v-col>
+    </v-row>
 
     <br />
 
@@ -40,11 +69,11 @@
 
             <vgl-mesh-lambert-material name="mat_left" color="#000055" />
             <vgl-box-geometry name="slab_left" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${-x/2-30} ${-z/2 + 2} ${-y/2}`" />
+            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${left_x} ${left_z} ${left_y}`" />
 
             <vgl-mesh-lambert-material name="mat_right" color="#005500" />
             <vgl-box-geometry name="slab_right" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${x/2+30} ${z/2 + 2} ${y/2}`" />
+            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${right_x} ${right_z} ${right_y}`" />
 
             <vgl-directional-light position="0 1 2" intensity="2" />
 
@@ -74,82 +103,152 @@ export default {
   },
   data() {
     return {
-      device: '--',
       selected_device: null,
-      devices: ['--'],
-      selected: '--',
-      dates: ['--'],
+      devices: [],
+      start_date: null,
+      end_date: null,
+      dates: [],
+      dates2: [],
+      isLoading: false,
+      progress: 0,
       current_time: null,
-      data: null,
+      data: [],
       idx: 0,
       isDrag: false,
       timer: null,
       prev_mouse_x: 0,
       prev_mouse_y: 0,
-      x: 0,
-      y: 0,
-      z: 0,
       r: 50,
       pi: 1,
       theta: 0,
-      chartData: null,
-      chartOptions: {
-        height: 600,
-        curveType: 'function',
-        vAxis: { 
-          title: '측정값',
-          maxValue: 4,
-          minValue: 0,
-        },
-        timeline: { groupByRowLabel: true },
-        explorer: { axis: 'horizontal', keepInBounds: true, maxZoomIn: 0.05, maxZoomOut: 1 },
-      }
+      // For display
+      x: 0,
+      y: 0,
+      z: 0,
+      a: 0,
+      leftFixed: false,
+      // For left slab
+      left_x: -30,
+      left_y: 0,
+      left_z: 2,
+      left_a: 0,
+      // For right slab
+      right_x: 30,
+      right_y: 0,
+      right_z: 2,
+      right_a: 0,
     }
   },
-  methods: {
-    measurement_formatter(row, column, value) {
-      return value.toFixed(2);
-    },
 
-    onChange() {
-      var vm = this;
-      vm.stop();
-
-      this.idx = 0;
+  watch: {
+    selected_device: function() {
+      this.start_date = null
+      this.end_date = null
+      this.dates = []
+      this.dates2 = []
+      this.data = []
 
       axios
-        .get('/api/measurement/?device_id=' + vm.selected_device.device_id + '&target_date=' + vm.selected)
-        .then(function(response) {
-          vm.data = response.data
-        });
+        .get(`/api/measurement_dates/?device_id=${this.selected_device.device_id}`)
+        .then((response) => {
+          this.dates = response.data
+        })
+    },
+
+    start_date: function() {
+      this.end_date = null
+      this.dates2 = this.dates.filter((date) => date >= this.start_date)
+    }
+  },
+
+  methods: {
+    fetchAndDraw() {
+      if(!this.selected_device) {
+        alert('계측기를 먼저 선택해주세요.')
+        return
+      }
+      if(!this.start_date || !this.end_date) {
+        alert('날짜를 먼저 선택해주세요.')
+        return
+      }
+
+      this.fetchData()
+    },
+
+    async fetchData() {
+      this.stop()
+      this.data = []
+      this.isLoading = true
+
+      let response = await axios
+        .get('/api/measurement_graph/', { params: {
+          device_id: this.selected_device.device_id, 
+          start_date: this.start_date,
+          end_date: this.end_date,
+          page_size: 200,
+        }})
+
+      const total_count = response.data.count
+      while(response.data.next) {
+        this.data = this.data.concat(response.data.results)
+        this.progress = this.data.length / total_count * 100
+
+        let nextLink = new URL(response.data.next)
+        nextLink = nextLink.pathname + nextLink.search
+
+        response = await axios.get(nextLink)
+      }
+
+      this.data = this.data.concat(response.data.results)
+      this.progress = this.data.length / total_count * 100
+      this.isLoading = false
     },
 
     sliderChange() {
-      if(this.data == null) return;
+      if(!this.data) return;
 
-      var idx = parseInt(this.idx * this.data.length / 100.0)
-      console.log(idx)
+      // FIXME(sjkim): for 백제큰다리, x-y axis are changed
+      this.current_time = this.data[this.idx].datetime
+      this.y = this.data[this.idx].diff_x.toFixed(2)
+      this.x = this.data[this.idx].diff_y.toFixed(2)
+      this.z = this.data[this.idx].diff_z.toFixed(2)
+      this.a = this.data[this.idx].diff_a.toFixed(2)
 
-      // for this change, axis are changed
-      this.y = this.data[idx].diff_x
-      this.x = this.data[idx].diff_y
-      this.z = this.data[idx].diff_z
-      this.current_time = this.data[idx].datetime
+      if(this.leftFixed) {
+        this.left_x = -30
+        this.left_y = 0
+        this.left_z = +2
+
+        this.right_x = this.x/1 + 30
+        this.right_y = this.y/1
+        this.right_z = this.z/1 + 2
+      } else {
+        this.left_x = -this.x/2 - 30
+        this.left_y = -this.y/2
+        this.left_z = -this.z/2 + 2
+
+        this.right_x = this.x/2 + 30
+        this.right_y = this.y/2
+        this.right_z = this.z/2 + 2
+      }
     },
 
     update() {
-      if(this.idx > 100) {
-        this.idx = -1
-      }
-      this.idx += 1
-
       this.sliderChange()
+
+      if(this.idx >= this.data.length-1) {
+        this.stop()
+        this.idx = 0
+        this.sliderChange()
+      }
+
+      this.idx += 1
     },
 
     start() {
       if(this.timer != null) return 
 
-      this.timer = setInterval(this.update, 100)
+      this.timer = setInterval(this.update, 50)
     },
 
     stop() {
@@ -163,13 +262,10 @@ export default {
       this.isDrag = true
       this.prev_mouse_x = event.offsetX
       this.prev_mouse_y = event.offsetY
-
-      console.log("start")
     },
 
     dragStop() {
       this.isDrag = false
-      console.log("stop")
     },
 
     move(event) {
@@ -200,30 +296,23 @@ export default {
       event.preventDefault()
     }, 
     onChangeDevice() {
-      var vm = this;
-      vm.dates = ['--'];
-      vm.selected = '--';
-
-      vm.stop();
-
-      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
+      this.stop();
+      this.dates = []
 
       axios
-        .get('/api/measurement_dates/?device_id=' + vm.selected_device.device_id)
+        .get('/api/measurement_dates/', {params: {device_id: this.selected_device}})
         .then(function(response) {
-          vm.dates = ['--'].concat(response.data);
-        });
+          this.dates = response.data
+        })
     },
   },
 
   mounted() {
-    var vm = this;
-
     axios
       .get('/api/device/')
-      .then(function(response) {
-        vm.devices = [{'name': '--'}].concat(response.data);
-      });
+      .then((response) => {
+        this.devices = response.data
+      })
   },
 
   beforeDestroy() {
