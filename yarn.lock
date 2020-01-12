@@ -8041,10 +8041,10 @@ thread-loader@^2.1.2:
     loader-utils "^1.1.0"
     neo-async "^2.6.0"
 
-three@^0.104.0:
-  version "0.104.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.104.0.tgz#9ad1da492153b753a89e0df066631215bd9d9087"
-  integrity sha512-q617IMBC5k40U2E9UC4/LtmhzTOOLB1jGMIooUL+QrhZ7abiGCSDrKrpCDt9V8RTl6xw+0FYfA1PYsIPKbQOgg==
+three@^0.112.1:
+  version "0.112.1"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.112.1.tgz#f8d8f4d0f8e5f753dac6260491b8209457fdc131"
+  integrity sha512-8I0O74hiYtKl3LgDNcPJbBGOlpekbcJ6fJnImmW3mFdeUFJ2H9Y3/UuUSW2sBdjrIlCM0gvOkaTEFlofO900TQ==
 
 throttle-debounce@^1.0.1:
   version "1.1.0"
@@ -8465,13 +8465,6 @@ vue-functional-data-merge@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vue-functional-data-merge/-/vue-functional-data-merge-3.1.0.tgz#08a7797583b7f35680587f8a1d51d729aa1dc657"
   integrity sha512-leT4kdJVQyeZNY1kmnS1xiUlQ9z1B/kdBFCILIjYYQDqZgLqCLa0UhjSSeRX6c3mUe6U5qYeM8LrEqkHJ1B4LA==
-
-vue-gl@^0.12.2:
-  version "0.12.2"
-  resolved "https://registry.yarnpkg.com/vue-gl/-/vue-gl-0.12.2.tgz#5e2badbf93832733ac057700eb39a1d0ae765457"
-  integrity sha512-ZBakXnodFDDD4G0SJ+9vWihASn4jyDLHd0qp+Qb/Ej2JuV3BhkgMzsSb58Rp5fQW08O5GF9KebMQsd1cAsWxQg==
-  dependencies:
-    three "^0.104.0"
 
 vue-google-charts@^0.3.2:
   version "0.3.2"

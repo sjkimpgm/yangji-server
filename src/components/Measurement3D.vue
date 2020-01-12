@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <v-row justify="space-around">
       <v-col cols="3">
         <v-select label="계측기 선택" :items="devices" item-text="name" return-object v-model="selected_device" />
@@ -20,7 +21,7 @@
 
     <v-row justify="start">
       <v-col cols="1">
-        <v-btn color="primary" @click="start()" :disabled="isLoading || Boolean(timer)">Play</v-btn>
+        <v-btn color="primary" @click="start()" :disabled="isLoading || Boolean(timer) || !data.length">Play</v-btn>
       </v-col>
       <v-col cols="1">
         <v-btn color="primary" @click="stop()" :disabled="isLoading || !timer">Stop</v-btn>
@@ -61,42 +62,16 @@
 
     <br />
 
-    <div style="width: 800px; height: 600px;" @mousedown="dragStart" @mouseup="dragStop" @mousemove="move" @mousewheel="wheel">
-      <vgl-renderer antialias style="width: 800px; height: 600px;">
-          <vgl-scene>
-
-            <vgl-ambient-light color="#bbbbbb" intensity="1" />
-
-            <vgl-mesh-lambert-material name="mat_left" color="#000055" />
-            <vgl-box-geometry name="slab_left" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_left" material="mat_left" :position="`${left_x} ${left_z} ${left_y}`" />
-
-            <vgl-mesh-lambert-material name="mat_right" color="#005500" />
-            <vgl-box-geometry name="slab_right" width=50 height=2 depth=20 />
-            <vgl-mesh geometry="slab_right" material="mat_right" :position="`${right_x} ${right_z} ${right_y}`" />
-
-            <vgl-directional-light position="0 1 2" intensity="2" />
-
-            <vgl-grid-helper size="100" divisions="20" position="0 0 0" />
-            <vgl-grid-helper size="100" divisions="20" position="0 0 20" />
-            <vgl-grid-helper size="100" divisions="20" position="0 0 -20" />
-
-          </vgl-scene>
-        <vgl-perspective-camera :orbit-position="`${r} ${pi} ${theta}`" />
-      </vgl-renderer>
-    </div>
+    <div class="scene" ref="scene" style="height: 600px; width: 800px;" />
   </div>
 </template>
 
 <script>
-import Vue from 'vue'
 import axios from 'axios'
-import * as VueGL from "vue-gl";
 import { setInterval, clearInterval } from 'timers';
 
-Object.keys(VueGL).forEach(name => {
-    Vue.component(name, VueGL[name]);
-});
+import * as THREE from "three"
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 
 export default {
   components: {
@@ -114,29 +89,32 @@ export default {
       current_time: null,
       data: [],
       idx: 0,
-      isDrag: false,
       timer: null,
-      prev_mouse_x: 0,
-      prev_mouse_y: 0,
-      r: 50,
-      pi: 1,
-      theta: 0,
+
       // For display
       x: 0,
       y: 0,
       z: 0,
       a: 0,
       leftFixed: false,
+
       // For left slab
       left_x: -30,
       left_y: 0,
       left_z: 2,
       left_a: 0,
+
       // For right slab
       right_x: 30,
       right_y: 0,
       right_z: 2,
       right_a: 0,
+
+      // For three.js
+      camera: null,
+      renderer: new THREE.WebGLRenderer(),
+      scene: new THREE.Scene(),
+      debug: false,
     }
   },
 
@@ -158,6 +136,35 @@ export default {
     start_date: function() {
       this.end_date = null
       this.dates2 = this.dates.filter((date) => date >= this.start_date)
+    },
+
+    idx: function() {
+      if(!this.data) return;
+
+      // FIXME(sjkim): for 백제큰다리, x-y axis are changed
+      this.current_time = this.data[this.idx].datetime
+      this.y = this.data[this.idx].diff_x.toFixed(2)
+      this.x = this.data[this.idx].diff_y.toFixed(2)
+      this.z = this.data[this.idx].diff_z.toFixed(2)
+      this.a = this.data[this.idx].diff_a.toFixed(2)
+
+      if(this.leftFixed) {
+        this.left_x = -30
+        this.left_y = 0
+        this.left_z = +2
+
+        this.right_x = this.x/1 + 30
+        this.right_y = this.y/1
+        this.right_z = this.z/1 + 2
+      } else {
+        this.left_x = -this.x/2 - 30
+        this.left_y = -this.y/2
+        this.left_z = -this.z/2 + 2
+
+        this.right_x = this.x/2 + 30
+        this.right_y = this.y/2
+        this.right_z = this.z/2 + 2
+      }
     }
   },
 
@@ -204,42 +211,11 @@ export default {
       this.isLoading = false
     },
 
-    sliderChange() {
-      if(!this.data) return;
-
-      // FIXME(sjkim): for 백제큰다리, x-y axis are changed
-      this.current_time = this.data[this.idx].datetime
-      this.y = this.data[this.idx].diff_x.toFixed(2)
-      this.x = this.data[this.idx].diff_y.toFixed(2)
-      this.z = this.data[this.idx].diff_z.toFixed(2)
-      this.a = this.data[this.idx].diff_a.toFixed(2)
-
-      if(this.leftFixed) {
-        this.left_x = -30
-        this.left_y = 0
-        this.left_z = +2
-
-        this.right_x = this.x/1 + 30
-        this.right_y = this.y/1
-        this.right_z = this.z/1 + 2
-      } else {
-        this.left_x = -this.x/2 - 30
-        this.left_y = -this.y/2
-        this.left_z = -this.z/2 + 2
-
-        this.right_x = this.x/2 + 30
-        this.right_y = this.y/2
-        this.right_z = this.z/2 + 2
-      }
-    },
-
     update() {
-      this.sliderChange()
-
       if(this.idx >= this.data.length-1) {
         this.stop()
         this.idx = 0
-        this.sliderChange()
+        return
       }
 
       this.idx += 1
@@ -257,57 +233,68 @@ export default {
       clearInterval(this.timer)
       this.timer = null
     },
-
-    dragStart(event) {
-      this.isDrag = true
-      this.prev_mouse_x = event.offsetX
-      this.prev_mouse_y = event.offsetY
-    },
-
-    dragStop() {
-      this.isDrag = false
-    },
-
-    move(event) {
-      if(this.isDrag == false) return
-
-      var diff_x = event.offsetX - this.prev_mouse_x
-      var diff_y = event.offsetY - this.prev_mouse_y
-
-      this.prev_mouse_x = event.offsetX
-      this.prev_mouse_y = event.offsetY
-
-      var theta_modifier = 1.0 / 3
-      this.theta -= (diff_x) / 400 * 3.14 * theta_modifier
-
-      var pi_modifier = 1.0 / 3
-      this.pi -= (diff_y) / 300 * 3.14 * pi_modifier
-
-      if(this.pi < 0) this.pi = 0
-      if(this.pi > 3.14) this.pi = 3.14
-    },
-
-    wheel(event) {
-      var r_modifier = 5
-      this.r += event.deltaY / 100 * r_modifier
-
-      // disable parent scroll
-      event.stopPropagation()
-      event.preventDefault()
-    }, 
-    onChangeDevice() {
-      this.stop();
-      this.dates = []
-
-      axios
-        .get('/api/measurement_dates/', {params: {device_id: this.selected_device}})
-        .then(function(response) {
-          this.dates = response.data
-        })
-    },
   },
 
   mounted() {
+    const el = this.$refs.scene
+
+    this.renderer.setSize(el.clientWidth, el.clientHeight)
+    el.appendChild(this.renderer.domElement)
+
+    // Camera
+    this.camera = new THREE.PerspectiveCamera(
+      50,
+      el.clientWidth / el.clientHeight,
+      0.1,
+      300
+    )
+    this.camera.position.y = 100 * Math.sin(Math.PI/6)
+    this.camera.position.z = 100 * Math.cos(Math.PI/6)
+
+    // Orbit controls
+    function render() {
+      this.renderer.render( this.scene, this.camera );
+    }
+
+    let controls = new OrbitControls(this.camera, this.renderer.domElement)
+    controls.addEventListener( 'change', render);
+		controls.minDistance = 20;
+		controls.maxDistance = 150;
+		controls.maxPolarAngle = Math.PI / 2;
+
+    // Light
+    const light1 = new THREE.AmbientLight(0xbbbbbb, 1)
+    this.scene.add(light1)
+
+    const light2 = new THREE.DirectionalLight(0xffffff, 2)
+    this.scene.add(light2)
+
+    // Grid helper
+    const grid = new THREE.GridHelper(100, 20)
+    this.scene.add(grid)
+
+    // Slabs
+    const boxGeo = new THREE.BoxGeometry(50, 2, 20)
+    const matLeft = new THREE.MeshLambertMaterial({ color: 0x000055 })
+    const leftSlab = new THREE.Mesh(boxGeo, matLeft)
+
+    const matRight = new THREE.MeshLambertMaterial({ color: 0x005500 })
+    const rightSlab = new THREE.Mesh(boxGeo, matRight)
+
+    this.scene.add(leftSlab)
+    this.scene.add(rightSlab)
+    
+    const animate = () => {
+      requestAnimationFrame(animate)
+
+      leftSlab.position.set(this.left_x, this.left_z, this.left_y)
+      rightSlab.position.set(this.right_x, this.right_z, this.right_y)
+
+      this.renderer.render(this.scene, this.camera)
+    };
+
+    animate()
+
     axios
       .get('/api/device/')
       .then((response) => {
@@ -320,7 +307,3 @@ export default {
   }
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-</style>
