@@ -214,13 +214,7 @@ def tmp(request):
     start_time = datetime.datetime(2020, 1, 9, 9, 44)
     end_time = datetime.datetime(2020, 1, 13, 23, 29)
     count = 0
-    for data in Measurement.objects.filter(datetime__gt=start_time, datetime__lt=end_time).order_by('datetime').all():
-        x, y, z, a = data.diff()
-
-        data.diff_x = x
-        data.diff_y = y
-        data.diff_z = z
-        data.diff_a = a
+    for data in Measurement.objects.filter(device_id='b8:27:eb:07:06:58', datetime__gt=start_time, datetime__lt=end_time).order_by('datetime').all():
         data.save()
         count += 1
 
