@@ -27,7 +27,7 @@
         <v-btn color="primary" @click="stop()" :disabled="isLoading || !timer">Stop</v-btn>
       </v-col>
       <v-col cols="2">
-        <v-slider v-model.number="idx" min="0" :max="this.data.length" step="1" @change="sliderChange" />
+        <v-slider v-model.number="idx" min="0" :max="this.data.length" step="1" />
       </v-col>
       <v-col cols="2">
         <v-checkbox v-model="leftFixed" label="고정단" class="ma-0" />
@@ -38,25 +38,42 @@
       </v-col>
 
       <v-col cols="1" class="pa-1">
-        <v-text-field label="X" v-model="x" read-only hide-details />
+        <v-text-field label="X" v-model="x" readonly hide-details />
       </v-col>
       <v-col cols="1" class="pa-1">
-        <v-text-field label="Y" v-model="y" read-only hide-details />
+        <v-text-field label="Y" v-model="y" readonly hide-details />
       </v-col>
       <v-col cols="1" class="pa-1">
-        <v-text-field label="Z" v-model="z" read-only hide-details />
+        <v-text-field label="Z" v-model="z" readonly hide-details />
       </v-col>
       <v-col cols="1" class="pa-1">
-        <v-text-field label="θ" v-model="a" read-only hide-details />
+        <v-text-field label="θ" v-model="a" readonly hide-details />
       </v-col>
     </v-row>
 
-    <v-row v-if="isLoading" justify="center">
-      <v-col cols="2">
+    <v-row justify="end">
+      <v-col cols="2" v-if="isLoading">
         <p>데이터 로딩: </p>
       </v-col>
-      <v-col cols="4">
+      <v-col cols="4" v-if="isLoading">
         <v-progress-linear :value="progress"></v-progress-linear>
+      </v-col>
+      
+      <v-col cols="2" class="pa-1" v-if="selected_device">
+        <p>유격 기본값:</p>
+      </v-col>
+
+      <v-col cols="1" class="pa-1" v-if="selected_device">
+        <v-text-field label="X" v-model.number="selected_device.params.default_offset[0]" hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1" v-if="selected_device">
+        <v-text-field label="Y" v-model.number="selected_device.params.default_offset[1]" hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1" v-if="selected_device">
+        <v-text-field label="Z" v-model.number="selected_device.params.default_offset[2]" hide-details />
+      </v-col>
+      <v-col cols="1" class="pa-1" v-if="selected_device">
+        <v-text-field label="θ" v-model.number="selected_device.params.default_offset[3]" hide-details />
       </v-col>
     </v-row>
 
@@ -112,9 +129,8 @@ export default {
 
       // For three.js
       camera: null,
-      renderer: new THREE.WebGLRenderer(),
+      renderer: new THREE.WebGLRenderer({antialias: true}),
       scene: new THREE.Scene(),
-      debug: false,
     }
   },
 
@@ -143,25 +159,30 @@ export default {
 
       // FIXME(sjkim): for 백제큰다리, x-y axis are changed
       this.current_time = this.data[this.idx].datetime
-      this.y = this.data[this.idx].diff_x.toFixed(2)
-      this.x = this.data[this.idx].diff_y.toFixed(2)
-      this.z = this.data[this.idx].diff_z.toFixed(2)
-      this.a = this.data[this.idx].diff_a.toFixed(2)
+      this.y = this.data[this.idx].diff_x + this.selected_device.params.default_offset[1]
+      this.x = this.data[this.idx].diff_y + this.selected_device.params.default_offset[0]
+      this.z = this.data[this.idx].diff_z + this.selected_device.params.default_offset[2]
+      this.a = this.data[this.idx].diff_a + this.selected_device.params.default_offset[3]
+
+      this.x = this.x.toFixed(2)
+      this.y = this.y.toFixed(2)
+      this.z = this.z.toFixed(2)
+      this.a = this.a.toFixed(2)
 
       if(this.leftFixed) {
-        this.left_x = -30
+        this.left_x = -25
         this.left_y = 0
         this.left_z = +2
 
-        this.right_x = this.x/1 + 30
+        this.right_x = this.x/1 + 25
         this.right_y = this.y/1
         this.right_z = this.z/1 + 2
       } else {
-        this.left_x = -this.x/2 - 30
+        this.left_x = -this.x/2 - 25
         this.left_y = -this.y/2
         this.left_z = -this.z/2 + 2
 
-        this.right_x = this.x/2 + 30
+        this.right_x = this.x/2 + 25
         this.right_y = this.y/2
         this.right_z = this.z/2 + 2
       }
@@ -209,6 +230,7 @@ export default {
       this.data = this.data.concat(response.data.results)
       this.progress = this.data.length / total_count * 100
       this.isLoading = false
+      this.idx = 0
     },
 
     update() {
@@ -241,6 +263,10 @@ export default {
     this.renderer.setSize(el.clientWidth, el.clientHeight)
     el.appendChild(this.renderer.domElement)
 
+    // Scene
+    this.scene.background = new THREE.Color( 0xe0e0e0 );
+		this.scene.fog = new THREE.Fog( 0xe0e0e0, 200, 300 );
+
     // Camera
     this.camera = new THREE.PerspectiveCamera(
       50,
@@ -248,38 +274,83 @@ export default {
       0.1,
       300
     )
-    this.camera.position.y = 100 * Math.sin(Math.PI/6)
-    this.camera.position.z = 100 * Math.cos(Math.PI/6)
+    this.camera.position.y = 100
+    this.camera.position.z = 100
+    this.camera.lookAt(new THREE.Vector3(0, 0, 0))
 
     // Orbit controls
-    function render() {
-      this.renderer.render( this.scene, this.camera );
-    }
-
     let controls = new OrbitControls(this.camera, this.renderer.domElement)
-    controls.addEventListener( 'change', render);
 		controls.minDistance = 20;
-		controls.maxDistance = 150;
+		controls.maxDistance = 200;
 		controls.maxPolarAngle = Math.PI / 2;
 
     // Light
-    const light1 = new THREE.AmbientLight(0xbbbbbb, 1)
-    this.scene.add(light1)
+    let light = new THREE.HemisphereLight( 0xffffff, 0x444444 )
+		light.position.set( 0, 20, 0 )
+		this.scene.add( light )
 
-    const light2 = new THREE.DirectionalLight(0xffffff, 2)
-    this.scene.add(light2)
+		light = new THREE.DirectionalLight( 0xffffff )
+		light.position.set( 0, 20, 10 )
+    this.scene.add( light )
+    
+    // ground
+		let mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) )
+		mesh.rotation.x = - Math.PI / 2
+		this.scene.add( mesh )
 
-    // Grid helper
-    const grid = new THREE.GridHelper(100, 20)
-    this.scene.add(grid)
+		let grid = new THREE.GridHelper( 1000, 200, 0x000000, 0x000000 )
+		grid.material.opacity = 0.2
+    grid.material.transparent = true
+    grid.position.y = -3
+		this.scene.add( grid )
 
     // Slabs
-    const boxGeo = new THREE.BoxGeometry(50, 2, 20)
-    const matLeft = new THREE.MeshLambertMaterial({ color: 0x000055 })
-    const leftSlab = new THREE.Mesh(boxGeo, matLeft)
+    function createSlab(color) {
+      const slab = new THREE.Group()
 
-    const matRight = new THREE.MeshLambertMaterial({ color: 0x005500 })
-    const rightSlab = new THREE.Mesh(boxGeo, matRight)
+      const mat = new THREE.MeshLambertMaterial({ color })
+
+      const boardGeo = new THREE.BoxGeometry(50, 2, 20)
+      const sideGeo = new THREE.BoxGeometry(50, 0.5, 1)
+      const sidePillarGeo = new THREE.CylinderGeometry(0.3, 0.3, 2, 10)
+      const pillarGeo = new THREE.CylinderGeometry(4, 4, 5, 20)
+
+      let mesh = new THREE.Mesh(boardGeo, mat)
+      slab.add(mesh)
+
+      mesh = new THREE.Mesh(sideGeo, mat)
+      mesh.position.y = 3
+
+
+      for(let i = -1; i <= 1; i += 2) {
+        mesh = mesh.clone()
+        mesh.position.z = i * 9
+        slab.add(mesh)
+
+        let mesh2 = new THREE.Mesh(sidePillarGeo, mat)
+        mesh2.position.y = 2
+        mesh2.position.z = i * 9
+        for(let j = -5; j <= 5; ++j) {
+          mesh2 = mesh2.clone()
+          mesh2.position.x = j * 4.8
+          slab.add(mesh2)
+        }
+      }
+
+      // pillar
+      mesh = new THREE.Mesh(pillarGeo, mat)
+      mesh.position.y = -3
+
+      for(let i = -1; i <= 1; ++i) {
+        mesh = mesh.clone()
+        mesh.position.x = i * 20
+        slab.add(mesh)
+      }
+
+      return slab
+    }
+    const leftSlab = createSlab(0x202027)
+    const rightSlab = createSlab(0x202720)
 
     this.scene.add(leftSlab)
     this.scene.add(rightSlab)
