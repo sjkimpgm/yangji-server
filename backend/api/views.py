@@ -208,3 +208,20 @@ def calc_device(request):
     device.update(**d)
 
     return JsonResponse({}, safe=False, status=status.HTTP_200_OK)
+
+
+def tmp(request):
+    start_time = datetime.datetime(2020, 1, 9, 9, 44)
+    end_time = datetime.datetime(2020, 1, 13, 23, 29)
+    count = 0
+    for data in Measurement.objects.filter(datetime__gt=start_time, datetime__lt=end_time).order_by('datetime').all():
+        x, y, z, a = data.diff()
+
+        data.diff_x = x
+        data.diff_y = y
+        data.diff_z = z
+        data.diff_a = a
+        data.save()
+        count += 1
+
+    return JsonResponse({'count': count}, safe=False, status=status.HTTP_200_OK)
