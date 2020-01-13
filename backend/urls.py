@@ -35,7 +35,6 @@ urlpatterns = [
     path('api/measurement_recent/', views.measurement_recent),
     path('api/measurement_aggr/', views.measurement_aggr),
     path('api/measurement_fill_diff/', views.measurement_fill_diff),
-    path('api/tmp/', views.tmp),
 ]
 
 
