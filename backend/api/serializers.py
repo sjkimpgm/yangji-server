@@ -33,11 +33,14 @@ class MeasurementSerializer(serializers.ModelSerializer):
             prev = device.latest_datetime
 
             if (curr - prev).seconds > 10 * 60:
-                prev = Measurement.objects.filter(device_id=obj.device_id).latest('datetime')
-                device.params['offset'] = [prev.measure_modified_a,
-                                           prev.measure_modified_b,
-                                           prev.measure_modified_c,
-                                           prev.measure_modified_d]
+                try:
+                    prev = Measurement.objects.filter(device_id=obj.device_id).latest('datetime')
+                    device.params['offset'] = [prev.measure_modified_a,
+                                               prev.measure_modified_b,
+                                               prev.measure_modified_c,
+                                               prev.measure_modified_d]
+                except Exception:
+                    pass
 
             # Update device's latest_datetime
             device.latest_datetime = obj.datetime
