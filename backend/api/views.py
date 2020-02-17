@@ -38,7 +38,7 @@ def measurement_dates(request):
 
     dates = dates.values('datetime')
     distinct_dates = {d['datetime'].date() for d in dates}
-    distinct_dates = sorted(list(distinct_dates))
+    distinct_dates = sorted(list(distinct_dates), reverse=True)
     return JsonResponse(distinct_dates, safe=False, status=status.HTTP_200_OK)
 
 
@@ -46,10 +46,10 @@ def measurement_recent(request):
     device_id = request.GET.get('device_id', None)
     last_time = request.GET.get('last_time', None)
 
-    if device_id == None:
+    if device_id is None:
         return HttpResponseBadRequest("message: need device_id parameter")
 
-    if last_time == None:
+    if last_time is None:
         return HttpResponseBadRequest("message: need last_time parameter")
 
     last_time = datetime.datetime.strptime(last_time, '%Y-%m-%d %H:%M:%S')
