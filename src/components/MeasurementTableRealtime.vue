@@ -1,27 +1,46 @@
 <template>
   <div>
-    <div>
-      <span>계측기 선택: </span>
-      <select v-model="device" @change="onChangeDevice()">
-        <option v-for="option in devices" :key="option.name">
-          {{ option.name }}
-        </option>
-      </select>
-    </div>
+    <v-row justify="space-around">
+      <v-col cols="3">
+        <v-select label="계측기 선택" :items="devices" item-text="name" return-object v-model="selected_device" />
+      </v-col>
+    </v-row>
 
-    <el-table height="600" :data="tableData" :default-sort = "{prop: 'datetime', order: 'descending'}" >
-
-      <el-table-column prop="datetime" label="DateTime" width="200" sortable />
-      <el-table-column prop="diff_x" label="X" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_y" label="Y" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_z" label="Z" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="diff_a" label="theta" width="90" :formatter="measurement_formatter" />
-      <el-table-column prop="measure_a" label="A" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_b" label="B" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_c" label="C" width="90" :formatter="measurement_formatter" /> 
-      <el-table-column prop="measure_d" label="D" width="90" :formatter="measurement_formatter" />
-
-    </el-table>
+    <v-data-table
+      :headers="headers"
+      :items="tableData"
+      :items-per-page="300"
+      height="600"
+      class="elevation-1"
+      fixed-header
+      sort-by="datetime"
+      sort-desc
+    >
+      <template v-slot:item.diff_x="{ item }">
+        {{item.diff_x.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_y="{ item }">
+        {{item.diff_y.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_z="{ item }">
+        {{item.diff_z.toFixed(2)}}
+      </template>
+      <template v-slot:item.diff_a="{ item }">
+        {{item.diff_a.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_a="{ item }">
+        {{item.measure_a.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_b="{ item }">
+        {{item.measure_b.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_c="{ item }">
+        {{item.measure_c.toFixed(2)}}
+      </template>
+      <template v-slot:item.measure_d="{ item }">
+        {{item.measure_d.toFixed(2)}}
+      </template>
+    </v-data-table>
   </div>
 </template>
 
@@ -31,28 +50,96 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      device: '--',
       selected_device: null,
-      devices: ['--'],
-      selected_date: '--',
-      dates: ['--'],
-      tableData: null    
+      devices: [],
+      tableData: [],
+      headers: [
+        {
+          text: '시간',
+          align: 'center',
+          value: 'datetime',
+          sortable: false,
+        },
+        {
+          text: 'X',
+          align: 'center',
+          value: 'diff_x',
+          sortable: false,
+        },
+        {
+          text: 'Y',
+          align: 'center',
+          value: 'diff_y',
+          sortable: false,
+        },
+        {
+          text: 'Z',
+          align: 'center',
+          value: 'diff_z',
+          sortable: false,
+        },
+        {
+          text: 'θ',
+          align: 'center',
+          value: 'diff_a',
+          sortable: false,
+        },
+        {
+          text: 'A',
+          align: 'center',
+          value: 'measure_a',
+          sortable: false,
+        },
+        {
+          text: 'B',
+          align: 'center',
+          value: 'measure_b',
+          sortable: false,
+        },
+        {
+          text: 'C',
+          align: 'center',
+          value: 'measure_c',
+          sortable: false,
+        },
+        {
+          text: 'D',
+          align: 'center',
+          value: 'measure_d',
+          sortable: false,
+        },
+      ],
     }
   },
-  methods: {
-    measurement_formatter(row, column, value) {
-      return value.toFixed(1);
-    },
 
+  watch: {
+    selected_device: function() {
+      this.stop();
+
+      var now = new Date();
+      now.setMinutes(now.getMinutes() - 3);
+      var now_str = this.date_format(now);
+
+      this.tableData = []
+      axios
+        .get('/api/measurement_recent/?device_id=' + this.selected_device.device_id + '&last_time=' + now_str)
+        .then((response) => {
+          this.tableData = response.data
+
+          this.start();
+        });
+    }
+  },
+
+  methods: {
     update() {
-      var vm = this;
       var last_time = this.tableData[this.tableData.length-1].datetime;
 
       axios
-        .get('/api/measurement_recent/?device_id=' + vm.selected_device.device_id + '&last_time=' + last_time)
-        .then(function(response) {
-          vm.tableData = vm.tableData.concat(response.data)
-          vm.tableData = vm.tableData.slice(vm.tableData.length - 300)
+        .get('/api/measurement_recent/?device_id=' + this.selected_device.device_id + '&last_time=' + last_time)
+        .then((response) => {
+          this.tableData = this.tableData.concat(response.data)
+          this.tableData = this.tableData.slice(this.tableData.length - 300)
         });
     },
     
@@ -78,35 +165,14 @@ export default {
       var sec = d.getSeconds();
 
       return year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec
-    },
-
-    onChangeDevice() {
-      var vm = this;
-      vm.stop();
-
-      vm.selected_device = this.devices.find(function(d) { return d.name == vm.device});
-
-      var now = new Date();
-      now.setMinutes(now.getMinutes() - 3);
-      var now_str = this.date_format(now);
-
-      axios
-        .get('/api/measurement_recent/?device_id=' + vm.selected_device.device_id + '&last_time=' + now_str)
-        .then(function(response) {
-          vm.tableData = response.data
-
-          vm.start();
-        });
-    },
+    }
   },
 
   mounted() {
-    var vm = this;
-
     axios
       .get('/api/device/')
-      .then(function(response) {
-        vm.devices = [{'name': '--'}].concat(response.data);
+      .then((response) => {
+        this.devices = response.data;
       });
   },
 
@@ -115,8 +181,3 @@ export default {
   }
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-</style>
-
