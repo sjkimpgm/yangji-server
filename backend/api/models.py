@@ -99,7 +99,7 @@ class Measurement(models.Model):
         z = self.diff_z if self.diff_z else 0
         a = self.diff_a if self.diff_a else 0
 
-        return "[{}] {}: {:.3f}, {:.3f}, {:.3f}, {:.3f} / {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.device_id, self.datetime.strftime("%Y-%m-%d %H:%M:%S"), self.measure_a, self.measure_b, self.measure_c, self.measure_d, x, y, z, a)
+        return "{:.3f}, {:.3f}, {:.3f}, {:.3f} / {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(self.measure_a, self.measure_b, self.measure_c, self.measure_d, x, y, z, a)
 
 
 @receiver(pre_save, sender=Measurement)
