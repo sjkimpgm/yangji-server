@@ -17,10 +17,10 @@
     </div>
 
     <div>
-      <el-alert type="warning" title="X축 값이 정상범위를 벗어났습니다." v-if="error_x" />
-      <el-alert type="warning" title="Y축 값이 정상범위를 벗어났습니다." v-if="error_y" />
-      <el-alert type="warning" title="Z축 값이 정상범위를 벗어났습니다." v-if="error_z" />
-      <el-alert type="warning" title="θ축 값이 정상범위를 벗어났습니다." v-if="error_theta" />
+      <el-alert type="error" title="!! X축 값이 정상범위를 벗어났습니다 !!" :closable="false" v-if="error_x" />
+      <el-alert type="error" title="!! Y축 값이 정상범위를 벗어났습니다 !!" :closable="false" v-if="error_y" />
+      <el-alert type="error" title="!! Z축 값이 정상범위를 벗어났습니다 !!" :closable="false" v-if="error_z" />
+      <el-alert type="error" title="!! θ축 값이 정상범위를 벗어났습니다 !!" :closable="false" v-if="error_theta" />
     </div>
 
     <GChart
@@ -193,6 +193,38 @@ export default {
         }
 
         converted_data.push(array_m);
+      }
+
+      // Check min/max alert
+      i = 0;
+      vm.error_x = false;
+      vm.error_y = false;
+      vm.error_z = false;
+      vm.error_theta = false;
+
+      if(vm.check_x) { 
+        if(vm.value_min[i] < vm.selected_device.params.limit_min[i] || vm.value_max[i] > vm.selected_device.params.limit_max[i]) {
+          vm.error_x = true;
+        }
+        i += 1;
+      }
+      if(vm.check_y) { 
+        if(vm.value_min[i] < vm.selected_device.params.limit_min[i] || vm.value_max[i] > vm.selected_device.params.limit_max[i]) {
+          vm.error_y = true;
+        }
+        i += 1;
+      }
+      if(vm.check_z) { 
+        if(vm.value_min[i] < vm.selected_device.params.limit_min[i] || vm.value_max[i] > vm.selected_device.params.limit_max[i]) {
+          vm.error_z = true;
+        }
+        i += 1;
+      }
+      if(vm.check_theta) { 
+        if(vm.value_min[i] < vm.selected_device.params.limit_min[i] || vm.value_max[i] > vm.selected_device.params.limit_max[i]) {
+          vm.error_theta = true;
+        }
+        i += 1;
       }
 
       vm.chartData = converted_data;
