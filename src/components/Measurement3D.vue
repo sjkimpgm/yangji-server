@@ -169,20 +169,23 @@ export default {
       this.z = this.z.toFixed(2)
       this.a = this.a.toFixed(2)
 
+      // prevent overlapping slabs
+      this.calc_x = Math.max(0, this.x)
+
       if(this.leftFixed) {
         this.left_x = -25
         this.left_y = 0
         this.left_z = +2
 
-        this.right_x = this.x/1 + 25
+        this.right_x = this.calc_x/1 + 25
         this.right_y = this.y/1
         this.right_z = this.z/1 + 2
       } else {
-        this.left_x = -this.x/2 - 25
+        this.left_x = -this.calc_x/2 - 25
         this.left_y = -this.y/2
         this.left_z = -this.z/2 + 2
 
-        this.right_x = this.x/2 + 25
+        this.right_x = this.calc_x/2 + 25
         this.right_y = this.y/2
         this.right_z = this.z/2 + 2
       }
@@ -341,7 +344,7 @@ export default {
       mesh = new THREE.Mesh(pillarGeo, mat)
       mesh.position.y = -3
 
-      for(let i = -1; i <= 1; ++i) {
+      for(let i = -1; i <= 1; i += 2) {
         mesh = mesh.clone()
         mesh.position.x = i * 20
         slab.add(mesh)
