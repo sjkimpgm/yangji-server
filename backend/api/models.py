@@ -61,7 +61,7 @@ class Measurement(models.Model):
 
         if device.device_type == "default":
             return self.diff_default(device)
-        elif device.device_type == "adv_v3":
+        elif device.device_type in ["adv_v3", "adv_v3_test"]:
             return self.diff_adv_v3(device)
 
     def diff_default(self, device):

@@ -22,7 +22,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
         device = get_object_or_404(Device, device_id=obj.device_id)
 
         # For default, not apply offset
-        if device.device_type == 'default':
+        if device.device_type in ['default', 'adv_v3_test']:
             obj.measure_modified_a = obj.measure_a
             obj.measure_modified_b = obj.measure_b
             obj.measure_modified_c = obj.measure_c
