@@ -308,10 +308,11 @@ export default {
 		this.scene.add( grid )
 
     // Slabs
-    function createSlab(color) {
+    function createSlab(color, opacity) {
       const slab = new THREE.Group()
 
-      const mat = new THREE.MeshLambertMaterial({ color })
+      const transparent = true
+      const mat = new THREE.MeshLambertMaterial({ color, opacity, transparent })
 
       const boardGeo = new THREE.BoxGeometry(50, 2, 20)
       const sideGeo = new THREE.BoxGeometry(50, 0.5, 1)
@@ -352,15 +353,21 @@ export default {
 
       return slab
     }
-    const leftSlab = createSlab(0x202027)
-    const rightSlab = createSlab(0x202720)
 
+    // In here, create slab object to visualize 
+    // 1st param: color RGB
+    // 2nd param: opacity. [0.0, 1.0], 0.0 is transparent, 1.0 is opaque
+    const leftSlab = createSlab(0x202027, 1.0)
+    const rightSlab = createSlab(0x202720, 1.0)
+
+    // You must add object to scene, otherwise it isn't rendered
     this.scene.add(leftSlab)
     this.scene.add(rightSlab)
     
     const animate = () => {
       requestAnimationFrame(animate)
 
+      // In here, set position of objects. After 'this.renderer.render()' is called, objects are moved to certain position.
       leftSlab.position.set(this.left_x, this.left_z, this.left_y)
       rightSlab.position.set(this.right_x, this.right_z, this.right_y)
 
